@@ -50,5 +50,19 @@ sql/
   dml.sql               INSERT / UPDATE / DELETE / SELECT demonstrations
   queries.sql           JOIN, GROUP BY, HAVING, subqueries, vector similarity search
   tests.sql             constraint and integrity test cases (TC01-TC10)
+  triggers.sql          stored function, eligibility trigger, overview view (Stage 3)
+  triggers_test.sql     demonstrations of the function, trigger and view
+src/
+  app/                  Next.js pages and API routes (app/api/**/route.ts)
+  lib/db.ts             PostgreSQL connection pool, query(), withTransaction()
+.env.example            template for the git-ignored .env (database URL, JWT secret)
 SETUP.md                local setup guide
+```
+
+## Running the web app
+
+```powershell
+npm install
+Copy-Item .env.example .env   # then put your PostgreSQL password in .env
+npm run dev                   # http://localhost:3000
 ```

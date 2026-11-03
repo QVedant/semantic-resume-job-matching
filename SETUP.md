@@ -199,6 +199,13 @@ psql -U postgres -d placement_db -f sql/alter_drop.sql
 ```
 ✅ **Check:** you see `ALTER TABLE`, `DROP INDEX` and `CREATE INDEX`, with no `ERROR` lines.
 
+### 5c-2. Add the trigger, stored function and view
+```powershell
+psql -U postgres -d placement_db -f sql/triggers.sql
+```
+✅ **Check:** you see `CREATE FUNCTION`, `CREATE TRIGGER` and `CREATE VIEW`, with no
+`ERROR` lines. From now on, the database itself rejects ineligible applications.
+
 ### 5d. Load the sample data
 ```powershell
 psql -U postgres -d placement_db -f sql/seed.sql
@@ -258,7 +265,14 @@ psql -U postgres -d placement_db -P pager=off -e -f sql/tests.sql
   the database correctly blocking bad data, so those tests pass.
 - `dml.sql` changes the data (closes a job, deletes rows…).
 
-**To reset everything back to fresh sample data at any time**, re-run 5b → 5c → 5d.
+To see the trigger, function and view in action:
+```powershell
+psql -U postgres -d placement_db -P pager=off -e -f sql/triggers_test.sql
+```
+This **should** show 6 red `ERROR` lines (T4–T9): the trigger blocking ineligible
+applications.
+
+**To reset everything back to fresh sample data at any time**, re-run 5b → 5c → 5c-2 → 5d.
 
 ---
 
@@ -273,6 +287,45 @@ saves time later.
 
 ✅ **Check:** `node --version` prints `v22.x` or newer, and `npm --version`
 prints a version number.
+
+---
+
+## Step 9: Run the website
+
+### 9a. Install the project's packages (first time, and after a `git pull` that changes `package.json`)
+```powershell
+cd C:\DBMS_MiniProject\semantic-resume-job-matching
+```
+```powershell
+npm install
+```
+This downloads Next.js and the other libraries into a `node_modules` folder
+(git-ignored). On a slow connection it can take 10+ minutes; let it finish.
+
+### 9b. Create your `.env` file (one time only)
+The website needs your database password. It reads it from a file called `.env`,
+which Git ignores, so the password never reaches GitHub.
+```powershell
+Copy-Item .env.example .env
+```
+Then open `.env` in the editor and replace `YOUR_PASSWORD` with your PostgreSQL
+password from Step 2. If the password contains special characters, replace them as
+the comments in the file explain (for example `@` becomes `%40`).
+
+### 9c. Start the website
+```powershell
+npm run dev
+```
+Wait for `✓ Ready`, then open **http://localhost:3000** in your browser.
+Press `Ctrl + C` in PowerShell to stop the website.
+
+✅ **Check:**
+- The home page shows **"✓ Connected to PostgreSQL"** with the student, company,
+  job and application counts.
+- http://localhost:3000/api/health shows `"status":"ok"` and `"pgvector_version":"0.8.7"`.
+
+If the home page says **"✗ Cannot reach the database"**, the message under it tells
+you why. Usually the password in `.env` is wrong, or PostgreSQL isn't running.
 
 ---
 
@@ -308,7 +361,9 @@ git push origin main
 | Problem | Cause | Fix |
 | --- | --- | --- |
 | `psql : The term 'psql' is not recognized` | PostgreSQL's `bin` folder isn't in PATH | Redo Step 2.3, then **reopen** PowerShell |
-| `password authentication failed for user "postgres"` | Wrong password in `$env:PGPASSWORD` | Run the `$env:PGPASSWORD = "..."` line again with the correct password |
+| `password authentication failed for user "postgres"` | Wrong password in `$env:PGPASSWORD` (psql) or in `.env` (website) | Fix the password and try again. In `.env`, URL-encode special characters. |
+| Website says `DATABASE_URL is not set` | No `.env` file | Do Step 9b, then restart `npm run dev` |
+| `npm run dev` says port 3000 is in use | Another copy of the website is already running | Close the other PowerShell window running it, or use `npm run dev -- -p 3001` |
 | `extension "vector" is not available` | pgvector isn't installed | Do Step 3 |
 | `relation "students" does not exist` | `schema.sql` wasn't run on `placement_db` | Run 5b, and check that `-d placement_db` is in the command |
 | `database "placement_db" does not exist` | You skipped 5a | Run 5a |
