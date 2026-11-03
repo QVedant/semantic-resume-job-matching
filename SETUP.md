@@ -206,6 +206,14 @@ psql -U postgres -d placement_db -f sql/triggers.sql
 ✅ **Check:** you see `CREATE FUNCTION`, `CREATE TRIGGER` and `CREATE VIEW`, with no
 `ERROR` lines. From now on, the database itself rejects ineligible applications.
 
+### 5c-3. Add the resume-text and job-description columns
+```powershell
+psql -U postgres -d placement_db -f sql/embeddings_alter.sql
+```
+✅ **Check:** you see `CREATE FUNCTION` and several `ALTER TABLE` lines, with no `ERROR`
+lines. Students now have a `resume_text` column, and jobs have a `description` column,
+each limited to 300 words.
+
 ### 5d. Load the sample data
 ```powershell
 psql -U postgres -d placement_db -f sql/seed.sql
@@ -232,6 +240,16 @@ psql -U postgres -d placement_db -f sql/seed.sql
 
 **🎉 If you got this table, your setup matches Yash's.**
 
+### 5e. Load the sample resume texts and job descriptions
+```powershell
+psql -U postgres -d placement_db -f sql/seed_text.sql
+```
+✅ **Check:** it ends with a small table showing **10 of 10** students and **8 of 8**
+jobs have text.
+
+The vectors loaded so far are simple placeholders. Step 9d replaces them with real
+AI embeddings.
+
 ---
 
 ## Step 6: Quick test of the vector search
@@ -241,7 +259,10 @@ This asks the database: *"which 3 jobs best fit student Aarav?"*
 psql -U postgres -d placement_db -P pager=off -f sql/queries.sql
 ```
 ✅ **Check:** scroll to **Q14**. The top result is
-`Backend Engineer (Node.js)` with cosine_similarity **0.9888**.
+`Backend Engineer (Node.js)` with cosine_similarity **0.9888** (with the placeholder
+vectors). After Step 9d, Backend Engineer is still first, but the number is lower
+(about 0.63). Real AI embeddings give smaller similarity values; what matters is the
+order.
 
 ---
 
@@ -272,7 +293,8 @@ psql -U postgres -d placement_db -P pager=off -e -f sql/triggers_test.sql
 This **should** show 6 red `ERROR` lines (T4–T9): the trigger blocking ineligible
 applications.
 
-**To reset everything back to fresh sample data at any time**, re-run 5b → 5c → 5c-2 → 5d.
+**To reset everything back to fresh sample data at any time**, re-run
+5b → 5c → 5c-2 → 5c-3 → 5d → 5e, then `npm run embed:all` (Step 9d).
 
 ---
 
@@ -346,6 +368,27 @@ Press `Ctrl + C` in PowerShell to stop the website.
 If the home page says **"✗ Cannot reach the database"**, the message under it tells
 you why. Usually the password in `.env` is wrong, or PostgreSQL isn't running.
 
+### 9d. Download the AI model and create the real embeddings
+The matching uses the `all-mpnet-base-v2` model, which runs on your laptop.
+**Download it once (about 420 MB):**
+```powershell
+npm run model:download
+```
+✅ **Check:** it ends with `Test embedding: 768 numbers, ...`. The model is saved in
+the `.model-cache` folder (git-ignored), and everything works offline after this.
+
+**Then turn every sample resume and job into a real embedding:**
+```powershell
+npm run embed:all
+```
+✅ **Check:** it lists the 10 students and 8 jobs it embedded, then a table of each
+student's best open job, for example Aarav Nair → Backend Engineer (Node.js) and
+Karthik Iyer → Embedded Software Engineer.
+
+**To see the matching in the website:** log in as `aarav.nair@pesu.pes.edu`, then open
+http://localhost:3000/api/match. It shows his jobs ranked by meaning, each marked
+eligible or not.
+
 ---
 
 ## How we use Git (both of us)
@@ -382,6 +425,8 @@ git push origin main
 | `psql : The term 'psql' is not recognized` | PostgreSQL's `bin` folder isn't in PATH | Redo Step 2.3, then **reopen** PowerShell |
 | `password authentication failed for user "postgres"` | Wrong password in `$env:PGPASSWORD` (psql) or in `.env` (website) | Fix the password and try again. In `.env`, URL-encode special characters. |
 | Website says `DATABASE_URL is not set` | No `.env` file | Do Step 9b, then restart `npm run dev` |
+| `npm run model:download` fails or stops | Internet dropped during the 420 MB download | Run it again: it resumes from what's already saved |
+| `/api/match` says "Add your resume text first" | No real embeddings yet | Run Step 5e and then `npm run embed:all` (Step 9d) |
 | Login fails with an error mentioning `JWT_SECRET` | `.env` still has the example secret, or it's too short | Generate one as shown in Step 9b, then restart `npm run dev` |
 | `npm run dev` says port 3000 is in use | Another copy of the website is already running | Close the other PowerShell window running it, or use `npm run dev -- -p 3001` |
 | `extension "vector" is not available` | pgvector isn't installed | Do Step 3 |

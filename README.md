@@ -52,15 +52,24 @@ sql/
   tests.sql             constraint and integrity test cases (TC01-TC10)
   triggers.sql          stored function, eligibility trigger, overview view (Stage 3)
   triggers_test.sql     demonstrations of the function, trigger and view
+  embeddings_alter.sql  resume_text / description columns, word_count() + 300-word CHECKs
+  seed_text.sql         sample resume texts and job descriptions
+scripts/
+  download-model.ts     one-time download of the embedding model (npm run model:download)
+  embed-all.ts          embed every resume and job, recompute matches (npm run embed:all)
 src/
   app/                  Next.js pages and API routes (app/api/**/route.ts)
     api/auth/           register / login / logout
+    api/match/          vector similarity search: jobs ranked for the logged-in student
+    api/student/resume/ save resume text -> embed -> refresh matches (one transaction)
     student/ recruiter/ officer/   role dashboards
   components/           Navbar, login and register forms
   lib/db.ts             PostgreSQL connection pool, query(), withTransaction()
   lib/auth.ts           bcrypt password hashing, session cookie, role checks
   lib/session.ts        signed JWT session tokens (jose)
   lib/validation.ts     zod input validation schemas
+  lib/embeddings.ts     local AI model: text -> 768-number vector
+  lib/matching.ts       saves vectors (versioned), refreshes match scores
   middleware.ts         role-based route guard
 .env.example            template for the git-ignored .env (database URL, JWT secret)
 SETUP.md                local setup guide
@@ -71,5 +80,7 @@ SETUP.md                local setup guide
 ```powershell
 npm install
 Copy-Item .env.example .env   # then put your PostgreSQL password in .env
-npm run dev                   # http://localhost:3000
+npm run model:download       # one time: the AI model (~420 MB)
+npm run embed:all            # embed all sample resumes and jobs
+npm run dev                  # http://localhost:3000
 ```

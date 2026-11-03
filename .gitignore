@@ -41,3 +41,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# downloaded AI model files (~420 MB), re-downloaded by `npm run model:download`
+/.model-cache/

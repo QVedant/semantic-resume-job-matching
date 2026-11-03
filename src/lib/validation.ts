@@ -3,7 +3,7 @@
 // touching the database. The database still has its own CHECK / UNIQUE /
 // NOT NULL rules as a second layer, so bad data is stopped twice.
 import { z } from "zod";
-import { BRANCHES } from "@/lib/constants";
+import { BRANCHES, MAX_TEXT_WORDS, countWords } from "@/lib/constants";
 
 // Emails are trimmed and lower-cased so "Aarav@PES.edu " and "aarav@pes.edu"
 // count as the same account.
@@ -70,6 +70,19 @@ export const loginSchema = z.object({
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
+
+// Resume text: at least a sentence, at most 300 words (same limit as the
+// database CHECK chk_student_resume_words).
+export const resumeSchema = z.object({
+  resume_text: z
+    .string()
+    .trim()
+    .refine((text) => countWords(text) >= 20, "Write at least 20 words about your skills and experience")
+    .refine(
+      (text) => countWords(text) <= MAX_TEXT_WORDS,
+      `Resume must be ${MAX_TEXT_WORDS} words or fewer`,
+    ),
+});
 
 // Turns zod's list of problems into { fieldName: "first message" } so each
 // form field can show its own error.

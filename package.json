@@ -6,9 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "model:download": "tsx scripts/download-model.ts",
+    "embed:all": "tsx --env-file=.env scripts/embed-all.ts"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.3.2",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.15",
     "next": "15.5.28",
@@ -27,6 +30,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.28",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }
