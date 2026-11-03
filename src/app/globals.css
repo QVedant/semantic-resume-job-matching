@@ -22,5 +22,33 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Reusable building blocks shared by every page. */
+@layer components {
+  .card {
+    @apply rounded-xl border border-black/10 p-6 dark:border-white/15;
+  }
+  .label {
+    @apply mb-1 block text-sm font-medium;
+  }
+  .input {
+    @apply w-full rounded-lg border border-black/20 bg-transparent px-3 py-2 outline-none focus:border-blue-500 dark:border-white/20;
+  }
+  .input-invalid {
+    @apply border-red-500 dark:border-red-500;
+  }
+  .field-error {
+    @apply mt-1 text-sm text-red-600 dark:text-red-400;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border border-black/20 px-4 py-2 font-medium transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/20 dark:hover:bg-white/10;
+  }
+  .alert-error {
+    @apply rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300;
+  }
 }

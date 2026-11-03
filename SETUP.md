@@ -308,9 +308,20 @@ which Git ignores, so the password never reaches GitHub.
 ```powershell
 Copy-Item .env.example .env
 ```
-Then open `.env` in the editor and replace `YOUR_PASSWORD` with your PostgreSQL
-password from Step 2. If the password contains special characters, replace them as
-the comments in the file explain (for example `@` becomes `%40`).
+Then open `.env` in the editor and fill in two values:
+
+1. **`DATABASE_URL`**: replace `YOUR_PASSWORD` with your PostgreSQL password from
+   Step 2. If the password contains special characters, replace them as the comments
+   in the file explain (for example `@` becomes `%40`).
+2. **`JWT_SECRET`**: the secret key that signs logins. Generate a random one:
+   ```powershell
+   node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+   ```
+   Copy the output and paste it after `JWT_SECRET=` in place of
+   `replace-with-a-long-random-string`. The website refuses to log anyone in while
+   the example value is still there.
+
+Save the file (`Ctrl + S`).
 
 ### 9c. Start the website
 ```powershell
@@ -320,9 +331,17 @@ Wait for `✓ Ready`, then open **http://localhost:3000** in your browser.
 Press `Ctrl + C` in PowerShell to stop the website.
 
 ✅ **Check:**
-- The home page shows **"✓ Connected to PostgreSQL"** with the student, company,
-  job and application counts.
+- The home page shows the student, company, job and application counts under
+  **"Live from the database"**.
 - http://localhost:3000/api/health shows `"status":"ok"` and `"pgvector_version":"0.8.7"`.
+- **Log in** works with any sample account. Every sample account's password is
+  `Password@123`:
+
+  | Role | Email |
+  | --- | --- |
+  | Student | `aarav.nair@pesu.pes.edu` |
+  | Recruiter | `priya.menon@nimbuscloud.in` |
+  | Placement officer | `anita.rao@pes.edu` |
 
 If the home page says **"✗ Cannot reach the database"**, the message under it tells
 you why. Usually the password in `.env` is wrong, or PostgreSQL isn't running.
@@ -363,6 +382,7 @@ git push origin main
 | `psql : The term 'psql' is not recognized` | PostgreSQL's `bin` folder isn't in PATH | Redo Step 2.3, then **reopen** PowerShell |
 | `password authentication failed for user "postgres"` | Wrong password in `$env:PGPASSWORD` (psql) or in `.env` (website) | Fix the password and try again. In `.env`, URL-encode special characters. |
 | Website says `DATABASE_URL is not set` | No `.env` file | Do Step 9b, then restart `npm run dev` |
+| Login fails with an error mentioning `JWT_SECRET` | `.env` still has the example secret, or it's too short | Generate one as shown in Step 9b, then restart `npm run dev` |
 | `npm run dev` says port 3000 is in use | Another copy of the website is already running | Close the other PowerShell window running it, or use `npm run dev -- -p 3001` |
 | `extension "vector" is not available` | pgvector isn't installed | Do Step 3 |
 | `relation "students" does not exist` | `schema.sql` wasn't run on `placement_db` | Run 5b, and check that `-d placement_db` is in the command |

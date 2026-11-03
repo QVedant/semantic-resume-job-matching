@@ -63,6 +63,14 @@ export async function withTransaction<T>(
   }
 }
 
+// True if `error` is PostgreSQL rejecting a duplicate value (SQLSTATE 23505)
+// on the given UNIQUE constraint, e.g. "users_email_key".
+export function isUniqueViolation(error: unknown, constraint: string): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  const pgError = error as { code?: string; constraint?: string };
+  return pgError.code === "23505" && pgError.constraint === constraint;
+}
+
 // Converts an embedding (array of 768 numbers) into pgvector's text format
 // '[0.1,0.2,...]', so it can be passed as a query parameter: $1::vector
 export function toVector(values: number[]): string {

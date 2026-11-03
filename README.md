@@ -54,7 +54,14 @@ sql/
   triggers_test.sql     demonstrations of the function, trigger and view
 src/
   app/                  Next.js pages and API routes (app/api/**/route.ts)
+    api/auth/           register / login / logout
+    student/ recruiter/ officer/   role dashboards
+  components/           Navbar, login and register forms
   lib/db.ts             PostgreSQL connection pool, query(), withTransaction()
+  lib/auth.ts           bcrypt password hashing, session cookie, role checks
+  lib/session.ts        signed JWT session tokens (jose)
+  lib/validation.ts     zod input validation schemas
+  middleware.ts         role-based route guard
 .env.example            template for the git-ignored .env (database URL, JWT secret)
 SETUP.md                local setup guide
 ```
