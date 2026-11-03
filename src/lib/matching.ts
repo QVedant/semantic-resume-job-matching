@@ -27,11 +27,20 @@ export async function studentEmbeddingText(studentId: number): Promise<string | 
   return row.skills ? `Skills: ${row.skills}.` : null;
 }
 
-// A job's title + description + required skills.
+// The text embedded for a job: title + description + required skills.
+// Used both for new jobs and when re-embedding existing ones, so the same
+// job always produces the same vector.
+export function buildJobText(title: string, description: string | null, skillNames: string[]): string {
+  return [title + ".", description?.trim(), skillNames.length ? `Required skills: ${skillNames.join(", ")}.` : null]
+    .filter(Boolean)
+    .join(" ");
+}
+
+// A job's text, read from the database.
 export async function jobEmbeddingText(jobId: number): Promise<string | null> {
   const [row] = await query<{ title: string; description: string | null; skills: string | null }>(
     `SELECT j.title, j.description,
-            string_agg(sk.name, ', ' ORDER BY js.weight DESC) AS skills
+            string_agg(sk.name, ', ' ORDER BY js.weight DESC, sk.name) AS skills
      FROM job_postings j
      LEFT JOIN job_skills js ON js.job_id   = j.job_id
      LEFT JOIN skills     sk ON sk.skill_id = js.skill_id
@@ -40,9 +49,7 @@ export async function jobEmbeddingText(jobId: number): Promise<string | null> {
     [jobId],
   );
   if (!row) return null;
-  return [row.title + ".", row.description?.trim(), row.skills ? `Required skills: ${row.skills}.` : null]
-    .filter(Boolean)
-    .join(" ");
+  return buildJobText(row.title, row.description, row.skills ? row.skills.split(", ") : []);
 }
 
 // ---------------------------------------------------------------------

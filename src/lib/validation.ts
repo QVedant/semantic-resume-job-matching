@@ -3,7 +3,7 @@
 // touching the database. The database still has its own CHECK / UNIQUE /
 // NOT NULL rules as a second layer, so bad data is stopped twice.
 import { z } from "zod";
-import { BRANCHES, MAX_TEXT_WORDS, countWords } from "@/lib/constants";
+import { BRANCHES, MAX_TEXT_WORDS, ROUND_TYPES, countWords, todayIso } from "@/lib/constants";
 
 // Emails are trimmed and lower-cased so "Aarav@PES.edu " and "aarav@pes.edu"
 // count as the same account.
@@ -78,6 +78,54 @@ export const applySchema = z.object({
 // The only change a student may make to their own application.
 export const withdrawSchema = z.object({
   status: z.literal("WITHDRAWN", "Students can only withdraw an application"),
+});
+
+// A recruiter's new job posting. Limits mirror the database rules:
+// chk_job_ctc, chk_job_min_cgpa, chk_skill_weight, chk_job_description_words.
+export const jobSchema = z.object({
+  title: z.string().trim().min(3, "Enter a job title").max(200, "Title is too long"),
+  description: z
+    .string()
+    .trim()
+    .refine((text) => countWords(text) >= 20, "Describe the role in at least 20 words")
+    .refine((text) => countWords(text) <= MAX_TEXT_WORDS, `Description must be ${MAX_TEXT_WORDS} words or fewer`),
+  location: z.string().trim().min(2, "Enter a location").max(150, "Location is too long"),
+  ctc_lpa: z.coerce
+    .number("CTC must be a number")
+    .positive("CTC must be more than 0")
+    .max(999, "CTC looks too large (enter it in lakhs per annum)"),
+  min_cgpa: z.coerce.number("Minimum CGPA must be a number").min(0, "Between 0 and 10").max(10, "Between 0 and 10"),
+  eligible_branches: z.array(z.enum(BRANCHES)).min(1, "Choose at least one eligible branch"),
+  deadline: z.iso.date("Choose a deadline").refine((date) => date >= todayIso(), "The deadline can't be in the past"),
+  status: z.enum(["OPEN", "DRAFT"]),
+  skills: z
+    .array(z.object({ skill_id: z.coerce.number().int().positive(), weight: z.coerce.number().min(0).max(1) }))
+    .min(1, "Add at least one required skill")
+    .max(10, "At most 10 skills")
+    .refine((skills) => new Set(skills.map((s) => s.skill_id)).size === skills.length, "Each skill only once"),
+  rounds: z
+    .array(
+      z.object({
+        round_name: z.string().trim().min(2, "Name each round").max(100, "Round name is too long"),
+        round_type: z.enum(ROUND_TYPES),
+      }),
+    )
+    .max(6, "At most 6 rounds"),
+});
+export type JobInput = z.infer<typeof jobSchema>;
+
+export const jobStatusSchema = z.object({
+  status: z.enum(["OPEN", "CLOSED"], "Status must be OPEN or CLOSED"),
+});
+
+export const applicantStatusSchema = z.object({
+  status: z.enum(["SHORTLISTED", "REJECTED", "OFFERED", "HIRED"], "Invalid status"),
+});
+
+export const roundResultSchema = z.object({
+  round_id: z.coerce.number().int().positive(),
+  result: z.enum(["PASSED", "REJECTED"], "Result must be PASSED or REJECTED"),
+  feedback: z.string().trim().max(500, "Feedback is too long").optional().default(""),
 });
 
 // Resume text: at least a sentence, at most 300 words (same limit as the

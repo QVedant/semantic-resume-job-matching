@@ -57,6 +57,7 @@ sql/
 scripts/
   download-model.ts     one-time download of the embedding model (npm run model:download)
   embed-all.ts          embed every resume and job, recompute matches (npm run embed:all)
+  reset-db.ps1          rebuild the database with fresh sample data (npm run db:reset)
 src/
   app/                  Next.js pages and API routes (app/api/**/route.ts)
     api/auth/           register / login / logout
@@ -65,9 +66,13 @@ src/
     api/applications/   apply (transaction + eligibility trigger) and withdraw
     student/            dashboard, recommended jobs, browse/search (keyword or by meaning),
                         job detail with skill gap, my applications, resume editor
-    recruiter/ officer/ role dashboards
+    api/recruiter/      post job (transaction + embedding), publish/close, applicant
+                        decisions, interview round results
+    recruiter/          dashboard, my jobs, post a job, applicants ranked by match score
+    officer/            placement officer dashboard
   components/           Navbar, login and register forms
     student/            job card, apply / withdraw buttons, resume editor, section menu
+    recruiter/          job form, publish/close button, applicant actions, section menu
   lib/db.ts             PostgreSQL connection pool, query(), withTransaction()
   lib/auth.ts           bcrypt password hashing, session cookie, role checks
   lib/session.ts        signed JWT session tokens (jose)
@@ -77,6 +82,8 @@ src/
   lib/jobs.ts           job search (recommended / by meaning / keyword) and job detail
   lib/applications.ts   apply transaction, withdraw, applications from the overview view
   lib/format.ts         display helpers (₹ LPA, dates, percentages)
+  lib/recruiter.ts      recruiter jobs, post-job transaction, applicant ranking (RANK()),
+                        status changes, round results (UPSERT, row lock)
   middleware.ts         role-based route guard
 .env.example            template for the git-ignored .env (database URL, JWT secret)
 SETUP.md                local setup guide

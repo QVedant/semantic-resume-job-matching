@@ -293,8 +293,13 @@ psql -U postgres -d placement_db -P pager=off -e -f sql/triggers_test.sql
 This **should** show 6 red `ERROR` lines (T4–T9): the trigger blocking ineligible
 applications.
 
-**To reset everything back to fresh sample data at any time**, re-run
-5b → 5c → 5c-2 → 5c-3 → 5d → 5e, then `npm run embed:all` (Step 9d).
+**To reset everything back to fresh sample data at any time** (once Step 9 is done):
+```powershell
+npm run db:reset
+```
+It asks you to type `RESET` to confirm, then re-runs 5b → 5c → 5c-2 → 5c-3 → 5d → 5e and
+`npm run embed:all` for you, using the password from `.env`. **It deletes everything
+in the database**, including accounts and jobs created through the website.
 
 ---
 

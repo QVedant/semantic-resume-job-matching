@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "model:download": "tsx scripts/download-model.ts",
-    "embed:all": "tsx --env-file=.env scripts/embed-all.ts"
+    "embed:all": "tsx --env-file=.env scripts/embed-all.ts",
+    "db:reset": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reset-db.ps1"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.2",
