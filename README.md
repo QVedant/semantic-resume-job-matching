@@ -69,10 +69,12 @@ src/
     api/recruiter/      post job (transaction + embedding), publish/close, applicant
                         decisions, interview round results
     recruiter/          dashboard, my jobs, post a job, applicants ranked by match score
-    officer/            placement officer dashboard
+    officer/            placement statistics (per branch, status, company), all
+                        applications (from the view, filterable), students (HAVING filters)
   components/           Navbar, login and register forms
     student/            job card, apply / withdraw buttons, resume editor, section menu
     recruiter/          job form, publish/close button, applicant actions, section menu
+    officer/            section menu, bar chart
   lib/db.ts             PostgreSQL connection pool, query(), withTransaction()
   lib/auth.ts           bcrypt password hashing, session cookie, role checks
   lib/session.ts        signed JWT session tokens (jose)
@@ -84,6 +86,8 @@ src/
   lib/format.ts         display helpers (₹ LPA, dates, percentages)
   lib/recruiter.ts      recruiter jobs, post-job transaction, applicant ranking (RANK()),
                         status changes, round results (UPSERT, row lock)
+  lib/rounds.ts         current interview round helper
+  lib/officer.ts        campus statistics and searchable application / student lists
   middleware.ts         role-based route guard
 .env.example            template for the git-ignored .env (database URL, JWT secret)
 SETUP.md                local setup guide
