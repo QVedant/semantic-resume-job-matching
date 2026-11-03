@@ -3,6 +3,10 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Tell the browser to draw its own controls (dropdown lists, date pickers,
+     scrollbars) in matching light/dark colours, otherwise dropdown options can
+     end up light text on a white list in dark mode. */
+  color-scheme: light dark;
 }
 
 @theme inline {
@@ -35,6 +39,11 @@ body {
   }
   .input {
     @apply w-full rounded-lg border border-black/20 bg-transparent px-3 py-2 outline-none focus:border-blue-500 dark:border-white/20;
+  }
+  /* Dropdown options always use the page's own colours, so they stay readable. */
+  select.input option {
+    background-color: var(--background);
+    color: var(--foreground);
   }
   .input-invalid {
     @apply border-red-500 dark:border-red-500;

@@ -66,6 +66,23 @@ export async function requireRole(role: Role): Promise<Session> {
   return session;
 }
 
+// For student pages: the session plus the student's own student_id
+// (a user_id from the login is not the same number as a student_id).
+export async function requireStudent(): Promise<{ session: Session; studentId: number }> {
+  const session = await requireRole("STUDENT");
+  const studentId = await studentIdForUser(session.userId);
+  if (!studentId) redirect("/login");
+  return { session, studentId };
+}
+
+export async function studentIdForUser(userId: number): Promise<number | null> {
+  const [row] = await query<{ student_id: number }>(
+    `SELECT student_id FROM students WHERE user_id = $1`,
+    [userId],
+  );
+  return row?.student_id ?? null;
+}
+
 // For API routes: returns the session, or a ready-made 401/403 JSON response.
 //   const auth = await requireApiRole("STUDENT");
 //   if (auth instanceof NextResponse) return auth;

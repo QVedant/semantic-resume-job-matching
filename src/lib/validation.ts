@@ -71,6 +71,15 @@ export const loginSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 
+export const applySchema = z.object({
+  job_id: z.coerce.number("Choose a job").int().positive("Choose a job"),
+});
+
+// The only change a student may make to their own application.
+export const withdrawSchema = z.object({
+  status: z.literal("WITHDRAWN", "Students can only withdraw an application"),
+});
+
 // Resume text: at least a sentence, at most 300 words (same limit as the
 // database CHECK chk_student_resume_words).
 export const resumeSchema = z.object({

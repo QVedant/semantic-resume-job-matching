@@ -1,18 +1,9 @@
 import { NextResponse } from "next/server";
-import { requireApiRole } from "@/lib/auth";
+import { requireApiRole, studentIdForUser } from "@/lib/auth";
 import { countWords } from "@/lib/constants";
 import { query } from "@/lib/db";
 import { updateStudentResume } from "@/lib/matching";
 import { fieldErrors, resumeSchema } from "@/lib/validation";
-
-// The logged-in student's student_id (a user_id is not a student_id).
-async function studentIdFor(userId: number): Promise<number | null> {
-  const [row] = await query<{ student_id: number }>(
-    `SELECT student_id FROM students WHERE user_id = $1`,
-    [userId],
-  );
-  return row?.student_id ?? null;
-}
 
 // GET /api/student/resume: the logged-in student's current resume text.
 export async function GET() {
@@ -48,7 +39,7 @@ export async function PUT(request: Request) {
     );
   }
 
-  const studentId = await studentIdFor(auth.userId);
+  const studentId = await studentIdForUser(auth.userId);
   if (!studentId) {
     return NextResponse.json({ error: "Student profile not found." }, { status: 404 });
   }

@@ -62,14 +62,21 @@ src/
     api/auth/           register / login / logout
     api/match/          vector similarity search: jobs ranked for the logged-in student
     api/student/resume/ save resume text -> embed -> refresh matches (one transaction)
-    student/ recruiter/ officer/   role dashboards
+    api/applications/   apply (transaction + eligibility trigger) and withdraw
+    student/            dashboard, recommended jobs, browse/search (keyword or by meaning),
+                        job detail with skill gap, my applications, resume editor
+    recruiter/ officer/ role dashboards
   components/           Navbar, login and register forms
+    student/            job card, apply / withdraw buttons, resume editor, section menu
   lib/db.ts             PostgreSQL connection pool, query(), withTransaction()
   lib/auth.ts           bcrypt password hashing, session cookie, role checks
   lib/session.ts        signed JWT session tokens (jose)
   lib/validation.ts     zod input validation schemas
   lib/embeddings.ts     local AI model: text -> 768-number vector
   lib/matching.ts       saves vectors (versioned), refreshes match scores
+  lib/jobs.ts           job search (recommended / by meaning / keyword) and job detail
+  lib/applications.ts   apply transaction, withdraw, applications from the overview view
+  lib/format.ts         display helpers (₹ LPA, dates, percentages)
   middleware.ts         role-based route guard
 .env.example            template for the git-ignored .env (database URL, JWT secret)
 SETUP.md                local setup guide
