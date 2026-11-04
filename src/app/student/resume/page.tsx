@@ -1,4 +1,5 @@
 import ResumeEditor from "@/components/student/ResumeEditor";
+import PageHeader from "@/components/ui/PageHeader";
 import { requireStudent } from "@/lib/auth";
 import { query } from "@/lib/db";
 import { formatDate } from "@/lib/format";
@@ -15,21 +16,26 @@ export default async function ResumePage() {
   );
 
   return (
-    <main className="space-y-5">
-      <header className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">My resume</h1>
-        <p className="opacity-70">
-          Describe your skills, projects and experience in your own words (up to 300 words). An AI
-          model on our server turns it into a 768-number vector that captures its meaning; jobs are
-          then matched against that.
-        </p>
-        {row?.embedded_at && (
-          <p className="text-sm opacity-60">
-            Last analysed {formatDate(row.embedded_at)} with {row.model_name}.
-          </p>
-        )}
-      </header>
+    <main className="max-w-3xl">
+      <PageHeader
+        title="My"
+        accent="resume"
+        description={
+          row?.embedded_at ? (
+            <>
+              Last analysed <strong>{formatDate(row.embedded_at)}</strong> with <strong>{row.model_name}</strong>
+            </>
+          ) : (
+            "Not analysed yet"
+          )
+        }
+      />
       <ResumeEditor initialText={row?.resume_text?.trim() ?? ""} />
+      <p className="mt-3 text-[13px] text-muted">
+        Write in plain sentences: skills, projects, internships, achievements. When you save, an AI model on our
+        server turns the text into a 768-number vector that captures its meaning, and every job is compared with it.
+        Your text never leaves this system.
+      </p>
     </main>
   );
 }

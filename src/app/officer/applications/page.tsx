@@ -1,7 +1,9 @@
 import Link from "next/link";
+import EmptyState from "@/components/ui/EmptyState";
+import PageHeader from "@/components/ui/PageHeader";
 import { requireRole } from "@/lib/auth";
 import { BRANCHES } from "@/lib/constants";
-import { formatCtc, formatDate, formatPercent, STATUS_STYLE } from "@/lib/format";
+import { companyText, formatPercent, formatShortDate, STATUS_STYLE } from "@/lib/format";
 import { companyOptions, searchApplications } from "@/lib/officer";
 
 const STATUSES = ["APPLIED", "SHORTLISTED", "REJECTED", "WITHDRAWN", "OFFERED", "HIRED"];
@@ -28,93 +30,114 @@ export default async function AllApplicationsPage({ searchParams }: Props) {
   ]);
 
   return (
-    <main className="space-y-5">
-      <h1 className="text-3xl font-bold tracking-tight">All applications</h1>
+    <main>
+      <PageHeader
+        title="All"
+        accent="applications"
+        description={
+          <>
+            <strong>{rows.length}</strong> application{rows.length === 1 ? "" : "s"}
+            {q && <> matching “{q}”</>}
+            {status && <> with status {status.toLowerCase()}</>}
+          </>
+        }
+      />
 
-      <form method="get" className="card grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="lg:col-span-2">
-          <label htmlFor="q" className="label">Search</label>
-          <input id="q" name="q" defaultValue={q} placeholder="Student name, USN or job title" className="input" />
-        </div>
-        <div>
-          <label htmlFor="company" className="label">Company</label>
-          <select id="company" name="company" defaultValue={companyId ?? ""} className="input">
-            <option value="">All</option>
-            {companies.map((c) => (
-              <option key={c.company_id} value={c.company_id}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="branch" className="label">Branch</label>
-          <select id="branch" name="branch" defaultValue={branch ?? ""} className="input">
-            <option value="">All</option>
-            {BRANCHES.map((b) => (
-              <option key={b} value={b}>{b}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="status" className="label">Status</label>
-          <select id="status" name="status" defaultValue={status ?? ""} className="input">
-            <option value="">All</option>
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex items-end gap-3 sm:col-span-2 lg:col-span-5">
-          <label className="flex items-center gap-2 text-sm">
-            Sort by
-            <select name="sort" defaultValue={sort} className="input w-auto">
-              <option value="recent">Most recent</option>
-              <option value="match">Highest match score</option>
-            </select>
+      <form method="get" className="card mb-5 flex flex-wrap items-end gap-3 p-4">
+        <div className="min-w-56 flex-1">
+          <label htmlFor="q" className="label">
+            Search
           </label>
-          <button type="submit" className="btn-primary">Apply filters</button>
-          <Link href="/officer/applications" className="btn-secondary">Clear</Link>
+          <input id="q" name="q" defaultValue={q} placeholder="Student, USN or job title" className="input" />
+        </div>
+        <Select id="company" label="Company" value={companyId ?? ""} options={companies.map((c) => [String(c.company_id), c.name])} />
+        <Select id="branch" label="Branch" value={branch ?? ""} options={BRANCHES.map((b) => [b, b])} />
+        <Select id="status" label="Status" value={status ?? ""} options={STATUSES.map((s) => [s, s.toLowerCase()])} />
+        <Select id="sort" label="Sort by" value={sort} options={[["recent", "Most recent"], ["match", "Best match"]]} noAll />
+        <div className="flex gap-2">
+          <button type="submit" className="btn-primary">
+            Apply
+          </button>
+          <Link href="/officer/applications" className="btn-secondary">
+            Clear
+          </Link>
         </div>
       </form>
 
-      <p className="text-sm opacity-70">{rows.length} application{rows.length === 1 ? "" : "s"}</p>
-
-      <div className="card overflow-x-auto p-0">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-black/10 text-xs uppercase opacity-70 dark:border-white/15">
-            <tr>
-              <th className="px-4 py-3">Student</th>
-              <th className="px-4 py-3">Job</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3 text-right">Match</th>
-              <th className="px-4 py-3 text-right">Rounds</th>
-              <th className="px-4 py-3">Applied</th>
-              <th className="px-4 py-3">Reviewed by</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-black/10 dark:divide-white/15">
-            {rows.map((row) => (
-              <tr key={row.application_id}>
-                <td className="px-4 py-3">
-                  <p className="font-medium">{row.student_name}</p>
-                  <p className="text-xs opacity-60">{row.usn} · {row.branch} · CGPA {row.cgpa}</p>
-                </td>
-                <td className="px-4 py-3">
-                  <p>{row.job_title}</p>
-                  <p className="text-xs opacity-60">{row.company_name} · {formatCtc(row.ctc)}</p>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLE[row.status]}`}>{row.status}</span>
-                </td>
-                <td className="px-4 py-3 text-right font-medium">{formatPercent(row.match_score)}</td>
-                <td className="px-4 py-3 text-right">{row.rounds_passed}/{row.total_rounds}</td>
-                <td className="px-4 py-3">{formatDate(row.applied_at)}</td>
-                <td className="px-4 py-3 text-xs opacity-80">{row.reviewed_by_email ?? "—"}</td>
+      {rows.length === 0 ? (
+        <EmptyState title="No applications match these filters">Clear a filter or try a shorter search.</EmptyState>
+      ) : (
+        <div className="card overflow-x-auto p-0">
+          <table className="w-full text-left text-sm">
+            <thead className="table-head">
+              <tr>
+                <th className="px-5 py-3 font-semibold">Student</th>
+                <th className="px-3 py-3 font-semibold">Job</th>
+                <th className="px-3 py-3 font-semibold">Status</th>
+                <th className="px-3 py-3 text-right font-semibold">Match</th>
+                <th className="px-3 py-3 text-right font-semibold">Rounds</th>
+                <th className="px-3 py-3 font-semibold">Applied</th>
+                <th className="px-5 py-3 font-semibold">Reviewed by</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {rows.length === 0 && <p className="px-4 py-6 opacity-70">No applications match these filters.</p>}
-      </div>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {rows.map((row) => (
+                <tr key={row.application_id} className="transition hover:bg-surface-muted">
+                  <td className="px-5 py-3">
+                    <p className="font-medium">{row.student_name}</p>
+                    <p className="font-mono text-xs text-muted">
+                      {row.usn} {row.branch} {row.cgpa}
+                    </p>
+                  </td>
+                  <td className="px-3 py-3">
+                    <p className={`text-[13px] font-medium ${companyText(row.company_id)}`}>{row.company_name}</p>
+                    <p>{row.job_title}</p>
+                  </td>
+                  <td className="px-3 py-3">
+                    <span className={STATUS_STYLE[row.status]}>{row.status.toLowerCase()}</span>
+                  </td>
+                  <td className="px-3 py-3 text-right font-mono font-bold">{formatPercent(row.match_score)}</td>
+                  <td className="px-3 py-3 text-right font-mono font-bold">
+                    {row.rounds_passed}/{row.total_rounds}
+                  </td>
+                  <td className="px-3 py-3 font-mono text-xs">{formatShortDate(row.applied_at)}</td>
+                  <td className="px-5 py-3 text-xs text-muted">{row.reviewed_by_email ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </main>
+  );
+}
+
+function Select({
+  id,
+  label,
+  value,
+  options,
+  noAll,
+}: {
+  id: string;
+  label: string;
+  value: string | number;
+  options: [string, string][];
+  noAll?: boolean;
+}) {
+  return (
+    <div className="w-40">
+      <label htmlFor={id} className="label">
+        {label}
+      </label>
+      <select id={id} name={id} defaultValue={value} className="input">
+        {!noAll && <option value="">All</option>}
+        {options.map(([optionValue, text]) => (
+          <option key={optionValue} value={optionValue}>
+            {text}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

@@ -1,59 +1,74 @@
 import Link from "next/link";
 import JobStatusButton from "@/components/recruiter/JobStatusButton";
-import { formatCtc, formatDate } from "@/lib/format";
+import EmptyState from "@/components/ui/EmptyState";
+import PageHeader from "@/components/ui/PageHeader";
+import { formatCtc, formatShortDate, JOB_STATUS_STYLE } from "@/lib/format";
 import { getRecruiterJobs, requireRecruiter } from "@/lib/recruiter";
-
-const JOB_STATUS_STYLE: Record<string, string> = {
-  OPEN: "bg-green-500/15 text-green-700 dark:text-green-300",
-  DRAFT: "bg-gray-500/15 text-gray-700 dark:text-gray-300",
-  CLOSED: "bg-red-500/15 text-red-700 dark:text-red-300",
-};
 
 // The recruiter's jobs with applicant counts (GROUP BY + COUNT FILTER).
 export default async function RecruiterJobsPage() {
   const { recruiterId } = await requireRecruiter();
   const jobs = await getRecruiterJobs(recruiterId);
+  const open = jobs.filter((job) => job.status === "OPEN").length;
 
   return (
-    <main className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold tracking-tight">My jobs</h1>
-        <Link href="/recruiter/jobs/new" className="btn-primary">Post a job</Link>
-      </div>
+    <main>
+      <PageHeader
+        title="My"
+        accent="jobs"
+        description={
+          <>
+            <strong>{open}</strong> open · <strong>{jobs.length - open}</strong> draft or closed
+          </>
+        }
+        actions={
+          <Link href="/recruiter/jobs/new" className="btn-primary">
+            Post a job
+          </Link>
+        }
+      />
 
       {jobs.length === 0 ? (
-        <p className="opacity-70">You haven&apos;t posted any jobs yet.</p>
+        <EmptyState title="You haven't posted any jobs yet">
+          <Link href="/recruiter/jobs/new" className="link">
+            Post your first job
+          </Link>
+        </EmptyState>
       ) : (
         <div className="card overflow-x-auto p-0">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-black/10 text-xs uppercase opacity-70 dark:border-white/15">
+            <thead className="table-head">
               <tr>
-                <th className="px-4 py-3">Job</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Deadline</th>
-                <th className="px-4 py-3 text-right">Applicants</th>
-                <th className="px-4 py-3 text-right">To review</th>
-                <th className="px-4 py-3 text-right">Shortlisted</th>
-                <th className="px-4 py-3 text-right">Offers</th>
-                <th className="px-4 py-3" />
+                <th className="px-5 py-3 font-semibold">Job</th>
+                <th className="px-3 py-3 font-semibold">Status</th>
+                <th className="px-3 py-3 text-right font-semibold">Applied</th>
+                <th className="px-3 py-3 text-right font-semibold">To review</th>
+                <th className="px-3 py-3 text-right font-semibold">Shortlisted</th>
+                <th className="px-3 py-3 text-right font-semibold">Offers</th>
+                <th className="px-5 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-black/10 dark:divide-white/15">
+            <tbody className="divide-y divide-line">
               {jobs.map((job) => (
-                <tr key={job.job_id}>
-                  <td className="px-4 py-3">
-                    <Link href={`/recruiter/jobs/${job.job_id}`} className="font-medium hover:underline">{job.title}</Link>
-                    <p className="text-xs opacity-60">{job.location} · {formatCtc(job.ctc)}</p>
+                <tr key={job.job_id} className="transition hover:bg-surface-muted">
+                  <td className="px-5 py-3.5">
+                    <Link href={`/recruiter/jobs/${job.job_id}`} className="text-[15px] font-medium hover:underline">
+                      {job.title}
+                    </Link>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      <span className="chip chip-gray">{job.location ?? "anywhere"}</span>
+                      <span className="chip chip-gray">{formatCtc(job.ctc)}</span>
+                      <span className="chip chip-gray">apply by {formatShortDate(job.deadline)}</span>
+                    </div>
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${JOB_STATUS_STYLE[job.status]}`}>{job.status}</span>
+                  <td className="px-3 py-3.5">
+                    <span className={JOB_STATUS_STYLE[job.status]}>{job.status.toLowerCase()}</span>
                   </td>
-                  <td className="px-4 py-3">{formatDate(job.deadline)}</td>
-                  <td className="px-4 py-3 text-right">{job.applicants}</td>
-                  <td className="px-4 py-3 text-right">{job.to_review}</td>
-                  <td className="px-4 py-3 text-right">{job.shortlisted}</td>
-                  <td className="px-4 py-3 text-right">{job.offers}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-3 py-3.5 text-right font-mono font-bold">{job.applicants}</td>
+                  <td className="px-3 py-3.5 text-right font-mono font-bold">{job.to_review}</td>
+                  <td className="px-3 py-3.5 text-right font-mono font-bold">{job.shortlisted}</td>
+                  <td className="px-3 py-3.5 text-right font-mono font-bold">{job.offers}</td>
+                  <td className="px-5 py-3.5 text-right">
                     <JobStatusButton jobId={job.job_id} status={job.status} />
                   </td>
                 </tr>

@@ -81,6 +81,7 @@ export type StudentApplication = {
   applied_at: string;
   job_id: number;
   job_title: string;
+  company_id: number;
   company_name: string;
   location: string | null;
   ctc: number | null;
@@ -109,7 +110,7 @@ export async function getStudentApplications(studentId: number): Promise<Student
     }
   >(
     `SELECT v.application_id, v.status, v.match_score, v.applied_at,
-            v.job_id, v.job_title, v.company_name, v.location, v.ctc, v.job_status,
+            v.job_id, v.job_title, v.company_id, v.company_name, v.location, v.ctc, v.job_status,
             v.rounds_passed, v.total_rounds,
             COALESCE((
               SELECT json_agg(json_build_object(

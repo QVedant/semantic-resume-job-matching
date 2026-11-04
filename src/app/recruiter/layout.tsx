@@ -1,14 +1,7 @@
 import type { ReactNode } from "react";
-import RecruiterNav from "@/components/recruiter/RecruiterNav";
-import { requireRole } from "@/lib/auth";
+import AppShell from "@/components/shell/AppShell";
 
-// Wraps every /recruiter/... page with the recruiter section menu.
-export default async function RecruiterLayout({ children }: { children: ReactNode }) {
-  await requireRole("RECRUITER");
-  return (
-    <div className="mx-auto max-w-5xl space-y-6 px-6 py-8">
-      <RecruiterNav />
-      {children}
-    </div>
-  );
+// Every /recruiter/... page: sidebar + content (AppShell re-checks the role).
+export default function RecruiterLayout({ children }: { children: ReactNode }) {
+  return <AppShell role="RECRUITER">{children}</AppShell>;
 }

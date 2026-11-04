@@ -74,11 +74,11 @@ export default function JobForm({ skills }: { skills: Skill[] }) {
   const invalid = (field: string) => (errors[field] ? "input-invalid" : "");
 
   return (
-    <form onSubmit={submit} className="space-y-6" noValidate>
+    <form onSubmit={submit} className="space-y-5" noValidate>
       {formError && <p className="alert-error">{formError}</p>}
 
       <section className="card space-y-4">
-        <h2 className="font-semibold">Job details</h2>
+        <h2 className="section-label">Job details</h2>
         <div>
           <label htmlFor="title" className="label">Job title</label>
           <input id="title" value={form.title} onChange={(e) => update("title", e.target.value)} className={`input ${invalid("title")}`} placeholder="e.g. Backend Engineer (Node.js)" />
@@ -86,10 +86,10 @@ export default function JobForm({ skills }: { skills: Skill[] }) {
         </div>
         <div>
           <label htmlFor="description" className="label">
-            Description: what the role involves and what you look for (the AI matches students on this)
+            Description (students are matched on its meaning)
           </label>
           <textarea id="description" rows={7} value={form.description} onChange={(e) => update("description", e.target.value)} className={`input ${invalid("description")}`} />
-          <p className={`mt-1 text-sm ${words > MAX_TEXT_WORDS ? "text-red-600 dark:text-red-400" : "opacity-70"}`}>
+          <p className={`mt-1 text-sm ${words > MAX_TEXT_WORDS ? "text-danger" : "text-muted"}`}>
             {words} / {MAX_TEXT_WORDS} words
           </p>
           {error("description")}
@@ -114,7 +114,7 @@ export default function JobForm({ skills }: { skills: Skill[] }) {
       </section>
 
       <section className="card space-y-4">
-        <h2 className="font-semibold">Eligibility (enforced by the database trigger)</h2>
+        <h2 className="section-label">Eligibility</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label htmlFor="min_cgpa" className="label">Minimum CGPA</label>
@@ -143,7 +143,7 @@ export default function JobForm({ skills }: { skills: Skill[] }) {
       </section>
 
       <section className="card space-y-3">
-        <h2 className="font-semibold">Required skills</h2>
+        <h2 className="section-label">Required skills</h2>
         {skillRows.map((row, index) => (
           <div key={index} className="flex flex-wrap gap-2">
             <select
@@ -181,10 +181,10 @@ export default function JobForm({ skills }: { skills: Skill[] }) {
       </section>
 
       <section className="card space-y-3">
-        <h2 className="font-semibold">Selection rounds (in order)</h2>
+        <h2 className="section-label">Selection rounds, in order</h2>
         {rounds.map((round, index) => (
           <div key={index} className="flex flex-wrap items-center gap-2">
-            <span className="w-6 text-sm opacity-60">{index + 1}.</span>
+            <span className="w-6 text-sm text-muted">{index + 1}.</span>
             <input
               aria-label="Round name"
               value={round.round_name}

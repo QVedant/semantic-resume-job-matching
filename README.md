@@ -60,6 +60,7 @@ scripts/
   reset-db.ps1          rebuild the database with fresh sample data (npm run db:reset)
 src/
   app/                  Next.js pages and API routes (app/api/**/route.ts)
+    (public)/           home, login, register, access denied (route group: not in the URL)
     api/auth/           register / login / logout
     api/match/          vector similarity search: jobs ranked for the logged-in student
     api/student/resume/ save resume text -> embed -> refresh matches (one transaction)
@@ -71,10 +72,13 @@ src/
     recruiter/          dashboard, my jobs, post a job, applicants ranked by match score
     officer/            placement statistics (per branch, status, company), all
                         applications (from the view, filterable), students (HAVING filters)
-  components/           Navbar, login and register forms
-    student/            job card, apply / withdraw buttons, resume editor, section menu
-    recruiter/          job form, publish/close button, applicant actions, section menu
-    officer/            section menu, bar chart
+  components/           public top bar, login / register forms and layout
+    shell/              logged-in top bar (tabs, command bar) and page frame
+    ui/                 page header, empty state
+    student/            job row, apply / withdraw buttons, resume editor
+    recruiter/          job form, publish/close button, applicant actions
+    officer/            bar chart
+  app/globals.css       design tokens (light + dark), fonts, shared component classes
   lib/db.ts             PostgreSQL connection pool, query(), withTransaction()
   lib/auth.ts           bcrypt password hashing, session cookie, role checks
   lib/session.ts        signed JWT session tokens (jose)

@@ -17,6 +17,7 @@ export type JobFilters = {
 export type JobListing = {
   job_id: number;
   title: string;
+  company_id: number;
   company: string;
   location: string | null;
   ctc: number | null;
@@ -109,7 +110,7 @@ export async function searchJobs(studentId: number, filters: JobFilters): Promis
 
   const rows = await query<JobListingRow>(
     `${ME_CTE}
-     SELECT j.job_id, j.title, c.name AS company, j.location, j.ctc, j.min_cgpa,
+     SELECT j.job_id, j.title, c.company_id, c.name AS company, j.location, j.ctc, j.min_cgpa,
             j.eligible_branches, j.deadline,
             ROUND((1 - (${distance}))::numeric, 4)        AS similarity,
             compute_match_score(me.student_id, j.job_id)  AS match_score,
@@ -155,7 +156,7 @@ export type JobDetail = JobListing & {
 export async function getJobDetail(studentId: number, jobId: number): Promise<JobDetail | null> {
   const [row] = await query<JobListingRow & Omit<JobDetail, keyof JobListing | "skills" | "rounds">>(
     `${ME_CTE}
-     SELECT j.job_id, j.title, c.name AS company, j.location, j.ctc, j.min_cgpa,
+     SELECT j.job_id, j.title, c.company_id, c.name AS company, j.location, j.ctc, j.min_cgpa,
             j.eligible_branches, j.deadline, j.description, j.status,
             c.industry, c.website,
             ROUND((1 - (je.embedding <=> me.embedding))::numeric, 4) AS similarity,

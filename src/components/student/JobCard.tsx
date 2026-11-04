@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatCtc, formatDate, formatPercent } from "@/lib/format";
+import { companyText, formatCtc, formatPercent, formatShortDate } from "@/lib/format";
 import type { JobListing } from "@/lib/jobs";
 import ApplyButton from "./ApplyButton";
 
@@ -12,66 +12,70 @@ export function ineligibilityReasons(job: Pick<JobListing, "cgpa_ok" | "branch_o
   return reasons;
 }
 
-// A coloured bar showing a 0–1 score.
+// A thin bar showing a 0–1 score, with the number in the data font.
 export function ScoreBar({ label, value }: { label: string; value: number | null }) {
   if (value === null) return null;
   const percent = Math.max(0, Math.min(100, Math.round(value * 100)));
   return (
-    <div className="min-w-32 space-y-1">
-      <div className="flex justify-between text-xs opacity-70">
-        <span>{label}</span>
-        <span className="font-semibold">{formatPercent(value)}</span>
+    <div className="space-y-1.5">
+      <div className="flex items-baseline justify-between gap-3 text-sm">
+        <span className="text-muted">{label}</span>
+        <span className="font-mono font-bold">{formatPercent(value)}</span>
       </div>
-      <div className="h-1.5 rounded-full bg-black/10 dark:bg-white/15">
-        <div className="h-1.5 rounded-full bg-blue-600" style={{ width: `${percent}%` }} />
+      <div className="h-1 rounded-full bg-line">
+        <div className="h-1 rounded-full bg-primary-strong" style={{ width: `${percent}%` }} />
       </div>
     </div>
   );
 }
 
-// One job in a list: title, company, key facts, match score, eligibility and
-// an Apply button (or the reason the student can't apply).
-export default function JobCard({
+// One job as a row inside a list card: coloured company label, title, data
+// chips (pay, place, deadline, scores, eligibility), and Apply on the right.
+// Place inside <ul className="card divide-y divide-line p-0">.
+export default function JobRow({
   job,
-  similarityLabel,
+  scoreLabel,
 }: {
   job: JobListing;
-  similarityLabel?: string; // e.g. "Relevance to your search"
+  scoreLabel?: string; // name for job.similarity, e.g. "fit" or "relevance"
 }) {
   const reasons = ineligibilityReasons(job);
 
   return (
-    <article className="card flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div className="space-y-1">
-        <Link href={`/student/jobs/${job.job_id}`} className="text-lg font-semibold hover:underline">
-          {job.title}
-        </Link>
-        <p className="text-sm opacity-80">
-          {job.company} · {job.location ?? "Location not set"} · {formatCtc(job.ctc)}
+    <li className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 space-y-2">
+        <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <span className={`text-[13px] font-medium ${companyText(job.company_id)}`}>{job.company}</span>
+          <Link href={`/student/jobs/${job.job_id}`} className="text-[15px] font-medium text-foreground hover:underline">
+            {job.title}
+          </Link>
         </p>
-        <p className="text-xs opacity-60">
-          Min CGPA {job.min_cgpa?.toFixed(2) ?? "—"} · {job.eligible_branches ?? "All branches"} · Apply by{" "}
-          {formatDate(job.deadline)}
-        </p>
+        <div className="flex flex-wrap gap-1.5">
+          <span className="chip chip-gray">{formatCtc(job.ctc)}</span>
+          <span className="chip chip-gray">{job.location ?? "anywhere"}</span>
+          <span className="chip chip-gray">apply by {formatShortDate(job.deadline)}</span>
+          {scoreLabel && job.similarity !== null && (
+            <span className="chip chip-blue">
+              {scoreLabel} {formatPercent(job.similarity)}
+            </span>
+          )}
+          {job.match_score !== null && <span className="chip chip-blue">match {formatPercent(job.match_score)}</span>}
+          {!job.already_applied &&
+            reasons.map((reason) => (
+              <span key={reason} className="chip chip-red">
+                {reason}
+              </span>
+            ))}
+        </div>
       </div>
 
-      <div className="flex shrink-0 flex-col gap-3 sm:items-end">
-        <div className="flex gap-4">
-          {similarityLabel && <ScoreBar label={similarityLabel} value={job.similarity} />}
-          <ScoreBar label="Match score" value={job.match_score} />
-        </div>
+      <div className="shrink-0">
         {job.already_applied ? (
-          <span className="rounded-full bg-green-500/15 px-3 py-1 text-sm font-medium text-green-700 dark:text-green-300">
-            ✓ Applied
-          </span>
+          <span className="chip chip-green">✓ applied</span>
         ) : job.eligible ? (
           <ApplyButton jobId={job.job_id} />
-        ) : (
-          <span className="rounded-full bg-red-500/10 px-3 py-1 text-sm text-red-700 dark:text-red-300">
-            Not eligible: {reasons.join(", ")}
-          </span>
-        )}
+        ) : null}
       </div>
-    </article>
+    </li>
   );
 }

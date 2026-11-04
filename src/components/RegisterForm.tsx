@@ -99,7 +99,7 @@ export default function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="card space-y-4" noValidate>
       {/* Role switch: decides which extra fields are shown and sent. */}
-      <div className="grid grid-cols-2 gap-2 rounded-lg bg-black/5 p-1 dark:bg-white/10">
+      <div className="grid grid-cols-2 rounded-full border border-line-strong bg-surface p-1">
         {(["STUDENT", "RECRUITER"] as const).map((option) => (
           <button
             key={option}
@@ -109,8 +109,8 @@ export default function RegisterForm() {
               setErrors({});
               setFormError(null);
             }}
-            className={`rounded-md py-2 text-sm font-medium transition ${
-              role === option ? "bg-blue-600 text-white" : "hover:bg-black/5 dark:hover:bg-white/10"
+            className={`rounded-full py-1.5 text-sm font-medium transition ${
+              role === option ? "bg-ink text-on-ink" : "text-muted hover:text-foreground"
             }`}
           >
             {option === "STUDENT" ? "I'm a student" : "I'm a recruiter"}
@@ -160,9 +160,9 @@ export default function RegisterForm() {
         {busy ? "Creating account…" : "Create account"}
       </button>
 
-      <p className="text-center text-sm opacity-80">
+      <p className="text-center text-sm text-muted">
         Already registered?{" "}
-        <Link href="/login" className="font-medium text-blue-600 hover:underline dark:text-blue-400">
+        <Link href="/login" className="link">
           Log in
         </Link>
       </p>

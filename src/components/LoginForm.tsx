@@ -72,9 +72,9 @@ export default function LoginForm({ next }: { next: string | null }) {
         {busy ? "Logging in…" : "Log in"}
       </button>
 
-      <p className="text-center text-sm opacity-80">
+      <p className="text-center text-sm text-muted">
         New here?{" "}
-        <Link href="/register" className="font-medium text-blue-600 hover:underline dark:text-blue-400">
+        <Link href="/register" className="link">
           Create an account
         </Link>
       </p>

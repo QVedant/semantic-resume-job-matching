@@ -59,13 +59,15 @@ export async function getBranchStats(): Promise<BranchStat[]> {
   return rows.map((row) => ({ ...row, avg_cgpa: Number(row.avg_cgpa), placement_pct: Number(row.placement_pct) }));
 }
 
-// How many applications are in each status (ENUM values sort in their declared order).
+// How many applications are in each status, in the process order
+// APPLIED, SHORTLISTED, ... HIRED. Ordering by v.status (the ENUM column,
+// not the ::text copy) sorts by the order the values were declared in.
 export async function getStatusCounts(): Promise<{ status: string; count: number }[]> {
   return query(
-    `SELECT status::text AS status, COUNT(*)::int AS count
-     FROM vw_application_overview
-     GROUP BY status
-     ORDER BY status`,
+    `SELECT v.status::text AS status, COUNT(*)::int AS count
+     FROM vw_application_overview v
+     GROUP BY v.status
+     ORDER BY v.status`,
   );
 }
 
@@ -116,6 +118,7 @@ export type ApplicationRow = {
   branch: string;
   cgpa: string;
   job_title: string;
+  company_id: number;
   company_name: string;
   ctc: number | null;
   rounds_passed: number;
@@ -150,7 +153,7 @@ export async function searchApplications(filters: ApplicationFilters): Promise<A
     }
   >(
     `SELECT application_id, status::text AS status, match_score, applied_at,
-            student_name, usn, branch, cgpa, job_title, company_name, ctc,
+            student_name, usn, branch, cgpa, job_title, company_id, company_name, ctc,
             rounds_passed, total_rounds, reviewed_by_email
      FROM vw_application_overview
      ${where.length ? `WHERE ${where.join(" AND ")}` : ""}

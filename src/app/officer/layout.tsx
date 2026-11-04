@@ -1,14 +1,7 @@
 import type { ReactNode } from "react";
-import OfficerNav from "@/components/officer/OfficerNav";
-import { requireRole } from "@/lib/auth";
+import AppShell from "@/components/shell/AppShell";
 
-// Wraps every /officer/... page with the officer section menu.
-export default async function OfficerLayout({ children }: { children: ReactNode }) {
-  await requireRole("PLACEMENT_OFFICER");
-  return (
-    <div className="mx-auto max-w-6xl space-y-6 px-6 py-8">
-      <OfficerNav />
-      {children}
-    </div>
-  );
+// Every /officer/... page: sidebar + content (AppShell re-checks the role).
+export default function OfficerLayout({ children }: { children: ReactNode }) {
+  return <AppShell role="PLACEMENT_OFFICER">{children}</AppShell>;
 }

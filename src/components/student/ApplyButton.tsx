@@ -35,7 +35,7 @@ export default function ApplyButton({ jobId, disabledReason }: { jobId: number; 
   }
 
   if (state === "done") {
-    return <p className="text-sm font-medium text-green-700 dark:text-green-400">✓ {message}</p>;
+    return <p className="text-sm font-medium text-success">✓ {message}</p>;
   }
 
   return (
@@ -50,7 +50,7 @@ export default function ApplyButton({ jobId, disabledReason }: { jobId: number; 
         {state === "busy" ? "Applying…" : "Apply"}
       </button>
       {message && (
-        <p className={`text-sm ${isError ? "text-red-600 dark:text-red-400" : ""}`}>{message}</p>
+        <p className={`text-sm ${isError ? "text-danger" : ""}`}>{message}</p>
       )}
     </div>
   );

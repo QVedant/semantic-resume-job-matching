@@ -1,63 +1,237 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------
+   Design tokens. Every colour in the app comes from here, defined once for
+   light mode and once for dark mode, with text/background pairs that keep
+   at least WCAG AA contrast (4.5:1).
+   Look: calm grey page with a faint dot grid, flat white cards with hairline
+   borders, one blue for actions, small coloured labels per company and
+   tinted monospace chips for status.
+   --------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  /* Tell the browser to draw its own controls (dropdown lists, date pickers,
-     scrollbars) in matching light/dark colours, otherwise dropdown options can
-     end up light text on a white list in dark mode. */
+  --background: #f3f4f6; /* page */
+  --surface: #ffffff; /* cards, inputs, buttons */
+  --surface-muted: #f8f9fb; /* hover, read-only areas */
+  --line: #e5e7eb; /* card borders, dividers */
+  --line-strong: #d1d5db; /* input and button borders */
+  --foreground: #111827; /* main text */
+  --muted: #59606d; /* secondary text */
+  --accent-ink: #4b5563; /* italic half of page titles */
+  --ink: #111827; /* active tab pill */
+  --on-ink: #ffffff;
+  --primary: #1d4ed8; /* links, brand */
+  --primary-strong: #1d4ed8; /* primary button */
+  --primary-hover: #1e40af;
+  --on-primary: #ffffff;
+  --primary-soft: #eff6ff;
+  --primary-line: #bfdbfe;
+  --success: #047857;
+  --success-soft: #ecfdf5;
+  --success-line: #a7f3d0;
+  --warning: #b45309;
+  --warning-soft: #fffbeb;
+  --warning-line: #fde68a;
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --danger-line: #fecaca;
+  --violet: #6d28d9;
+  --violet-soft: #f5f3ff;
+  --violet-line: #ddd6fe;
+  /* company label colours (like departments in a planner) */
+  --dept-1: #1d4ed8;
+  --dept-2: #be123c;
+  --dept-3: #0f766e;
+  --dept-4: #475569;
+  --dept-5: #b45309;
+  --dept-6: #6d28d9;
+  --dot: #d3d6dc;
+  --ring: rgb(29 78 216 / 0.25);
   color-scheme: light dark;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0e1014;
+    --surface: #161920;
+    --surface-muted: #1c2028;
+    --line: #272b34;
+    --line-strong: #353b47;
+    --foreground: #e6e8eb;
+    --muted: #9ca3af;
+    --accent-ink: #aeb4bf;
+    --ink: #e6e8eb;
+    --on-ink: #0e1014;
+    --primary: #8ab0ff;
+    --primary-strong: #3062e8;
+    --primary-hover: #4675f0;
+    --on-primary: #ffffff;
+    --primary-soft: rgb(59 130 246 / 0.12);
+    --primary-line: rgb(96 140 255 / 0.4);
+    --success: #4ade80;
+    --success-soft: rgb(74 222 128 / 0.1);
+    --success-line: rgb(74 222 128 / 0.35);
+    --warning: #fbbf24;
+    --warning-soft: rgb(251 191 36 / 0.1);
+    --warning-line: rgb(251 191 36 / 0.35);
+    --danger: #f87171;
+    --danger-soft: rgb(248 113 113 / 0.1);
+    --danger-line: rgb(248 113 113 / 0.35);
+    --violet: #b9a2ff;
+    --violet-soft: rgb(167 139 250 / 0.12);
+    --violet-line: rgb(167 139 250 / 0.4);
+    --dept-1: #8ab0ff;
+    --dept-2: #fb7185;
+    --dept-3: #2dd4bf;
+    --dept-4: #a3aec0;
+    --dept-5: #fbbf24;
+    --dept-6: #c4b5fd;
+    --dot: #252a33;
+    --ring: rgb(96 140 255 / 0.35);
   }
+}
+
+/* Tokens as Tailwind classes: bg-surface, text-muted, border-line, ... */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-muted: var(--muted);
+  --color-accent-ink: var(--accent-ink);
+  --color-ink: var(--ink);
+  --color-on-ink: var(--on-ink);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-line: var(--primary-line);
+  --color-info: var(--primary);
+  --color-info-soft: var(--primary-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-line: var(--success-line);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-line: var(--warning-line);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+  --color-violet: var(--violet);
+  --color-violet-soft: var(--violet-soft);
+  --color-violet-line: var(--violet-line);
+  --color-dept-1: var(--dept-1);
+  --color-dept-2: var(--dept-2);
+  --color-dept-3: var(--dept-3);
+  --color-dept-4: var(--dept-4);
+  --color-dept-5: var(--dept-5);
+  --color-dept-6: var(--dept-6);
+  /* Three typefaces, three jobs:
+     serif display for page titles, Inter for reading, typewriter mono for data chips. */
+  --font-sans: var(--font-inter), "Segoe UI", system-ui, sans-serif;
+  --font-display: "Times New Roman", Times, "Liberation Serif", serif;
+  --font-mono: "Courier New", Courier, "Liberation Mono", monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), "Segoe UI", system-ui, sans-serif;
 }
 
-/* Reusable building blocks shared by every page. */
+/* The faint dot grid behind page content. */
+.dot-grid {
+  background-image: radial-gradient(var(--dot) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--primary-strong);
+  width: 1rem;
+  height: 1rem;
+}
+
 @layer components {
+  /* Flat white card with a hairline border (no shadow). */
   .card {
-    @apply rounded-xl border border-black/10 p-6 dark:border-white/15;
+    @apply rounded-[10px] border border-line bg-surface p-5;
+  }
+  /* Small uppercase label that names a group of rows inside a card. */
+  .section-label {
+    @apply text-[11px] font-semibold tracking-[0.12em] text-muted uppercase;
   }
   .label {
-    @apply mb-1 block text-sm font-medium;
+    @apply mb-1.5 block text-sm font-medium text-foreground;
   }
   .input {
-    @apply w-full rounded-lg border border-black/20 bg-transparent px-3 py-2 outline-none focus:border-blue-500 dark:border-white/20;
+    @apply w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-[15px] text-foreground outline-none transition placeholder:text-muted/80 focus:border-primary-strong focus:ring-4 focus:ring-[var(--ring)] disabled:opacity-60;
   }
-  /* Dropdown options always use the page's own colours, so they stay readable. */
   select.input option {
-    background-color: var(--background);
+    background-color: var(--surface);
     color: var(--foreground);
   }
   .input-invalid {
-    @apply border-red-500 dark:border-red-500;
+    @apply border-danger focus:border-danger;
   }
   .field-error {
-    @apply mt-1 text-sm text-red-600 dark:text-red-400;
+    @apply mt-1.5 text-sm font-medium text-danger;
   }
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary-strong px-4 py-2 text-sm font-semibold text-on-primary transition hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-lg border border-black/20 px-4 py-2 font-medium transition hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/20 dark:hover:bg-white/10;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-line-strong bg-surface px-4 py-2 text-sm font-medium text-foreground transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-50 dark:text-[#1b0a0a];
+  }
+  /* Quiet destructive button: white with red text (like "Stop"). */
+  .btn-danger-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-danger-line bg-surface px-4 py-2 text-sm font-semibold text-danger transition hover:bg-danger-soft focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  /* Rounded pill button used in the top bar. */
+  .pill {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-full border border-line-strong bg-surface px-3.5 py-1.5 text-sm font-medium whitespace-nowrap text-foreground transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--ring)];
+  }
+  /* Small monospace chip for data: dates, counts, scores, statuses. */
+  .chip,
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-[4px] border px-1.5 font-mono text-[11px] leading-[18px] font-bold whitespace-nowrap;
+  }
+  .chip-gray {
+    @apply border-line-strong bg-surface-muted text-muted;
+  }
+  .chip-blue {
+    @apply border-primary-line bg-primary-soft text-primary;
+  }
+  .chip-green {
+    @apply border-success-line bg-success-soft text-success;
+  }
+  .chip-amber {
+    @apply border-warning-line bg-warning-soft text-warning;
+  }
+  .chip-red {
+    @apply border-danger-line bg-danger-soft text-danger;
+  }
+  .chip-violet {
+    @apply border-violet-line bg-violet-soft text-violet;
   }
   .alert-error {
-    @apply rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-300;
+    @apply rounded-lg border border-danger-line bg-danger-soft px-4 py-3 text-sm text-danger;
+  }
+  .alert-warning {
+    @apply rounded-lg border border-warning-line bg-warning-soft px-4 py-3 text-sm text-foreground;
+  }
+  .alert-success {
+    @apply rounded-lg border border-success-line bg-success-soft px-4 py-3 text-sm text-foreground;
+  }
+  .table-head {
+    @apply border-b border-line text-[11px] font-semibold tracking-[0.12em] text-muted uppercase;
+  }
+  .link {
+    @apply font-medium text-primary underline-offset-4 hover:underline;
   }
 }

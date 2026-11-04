@@ -19,12 +19,52 @@ export function formatDate(value: string | Date | null | undefined): string {
   return date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
-// Tailwind classes for an application status badge.
+// Monospace chip classes for an application status (colours from globals.css).
 export const STATUS_STYLE: Record<string, string> = {
-  APPLIED: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
-  SHORTLISTED: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-  OFFERED: "bg-green-500/15 text-green-700 dark:text-green-300",
-  HIRED: "bg-green-600/20 text-green-800 dark:text-green-200",
-  REJECTED: "bg-red-500/15 text-red-700 dark:text-red-300",
-  WITHDRAWN: "bg-gray-500/15 text-gray-700 dark:text-gray-300",
+  APPLIED: "chip chip-blue",
+  SHORTLISTED: "chip chip-amber",
+  OFFERED: "chip chip-green",
+  HIRED: "chip chip-violet",
+  REJECTED: "chip chip-red",
+  WITHDRAWN: "chip chip-gray",
+};
+
+// Monospace chip classes for a job status.
+export const JOB_STATUS_STYLE: Record<string, string> = {
+  OPEN: "chip chip-green",
+  DRAFT: "chip chip-gray",
+  CLOSED: "chip chip-red",
+};
+
+// Each company gets one of six label colours, chosen by its company_id, so
+// the same company always has the same colour (like departments in a
+// planner) and six companies in a row never share one.
+const DEPT_TEXT = ["text-dept-1", "text-dept-2", "text-dept-3", "text-dept-4", "text-dept-5", "text-dept-6"];
+const DEPT_BG = ["bg-dept-1", "bg-dept-2", "bg-dept-3", "bg-dept-4", "bg-dept-5", "bg-dept-6"];
+const deptIndex = (companyId: number) => (((companyId - 1) % DEPT_TEXT.length) + DEPT_TEXT.length) % DEPT_TEXT.length;
+export const companyText = (companyId: number) => DEPT_TEXT[deptIndex(companyId)];
+export const companyDot = (companyId: number) => DEPT_BG[deptIndex(companyId)];
+
+// Splits stored text into paragraphs for display: blank lines separate
+// paragraphs, single line breaks inside a paragraph become spaces (so text
+// typed with hard line breaks still flows nicely).
+export function paragraphs(text: string | null | undefined): string[] {
+  return (text ?? "")
+    .split(/\n\s*\n/)
+    .map((block) => block.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+}
+
+// "2026-12-02" -> "2 Dec" (short form for chips)
+export function formatShortDate(value: string | Date | null | undefined): string {
+  if (!value) return "—";
+  const date = value instanceof Date ? value : new Date(value);
+  return date.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+// Classes for an interview round result.
+export const RESULT_STYLE: Record<string, string> = {
+  PASSED: "text-success",
+  PENDING: "text-warning",
+  REJECTED: "text-danger",
 };

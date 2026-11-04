@@ -1,9 +1,11 @@
+import { Check, X } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ApplyButton from "@/components/student/ApplyButton";
 import { ScoreBar } from "@/components/student/JobCard";
+import PageHeader from "@/components/ui/PageHeader";
 import { requireStudent } from "@/lib/auth";
-import { formatCtc, formatDate, STATUS_STYLE } from "@/lib/format";
+import { companyText, formatCtc, formatDate, paragraphs, STATUS_STYLE } from "@/lib/format";
 import { getJobDetail } from "@/lib/jobs";
 
 type Props = { params: Promise<{ id: string }> };
@@ -19,93 +21,116 @@ export default async function JobDetailPage({ params }: Props) {
   if (!job) notFound();
 
   const checks = [
-    { ok: job.status === "OPEN", text: `Job is open (status: ${job.status})` },
-    { ok: job.deadline_ok, text: `Deadline ${formatDate(job.deadline)} has not passed` },
-    { ok: job.cgpa_ok, text: `Your CGPA meets the minimum of ${job.min_cgpa?.toFixed(2) ?? "—"}` },
-    { ok: job.branch_ok, text: `Your branch is in: ${job.eligible_branches ?? "all branches"}` },
+    { ok: job.status === "OPEN", text: `Applications are open` },
+    { ok: job.deadline_ok, text: `Deadline ${formatDate(job.deadline)} hasn't passed` },
+    { ok: job.cgpa_ok, text: `Your CGPA meets the ${job.min_cgpa?.toFixed(2) ?? "—"} minimum` },
+    { ok: job.branch_ok, text: `Your branch is eligible (${job.eligible_branches ?? "all"})` },
   ];
 
   return (
-    <main className="space-y-6">
-      <Link href="/student/jobs" className="text-sm underline">← All jobs</Link>
+    <main>
+      <Link href="/student/jobs" className="link text-sm">
+        All jobs
+      </Link>
 
-      <header className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">{job.title}</h1>
-        <p className="opacity-80">
-          {job.company}
-          {job.industry ? ` · ${job.industry}` : ""} · {job.location ?? "Location not set"} · {formatCtc(job.ctc)}
-        </p>
-      </header>
+      <PageHeader
+        title={job.title}
+        description={
+          <>
+            <span className={`font-medium ${companyText(job.company_id)}`}>{job.company}</span>
+            {job.industry ? `, ${job.industry}` : ""} · {job.location ?? "location not set"} · <strong>{formatCtc(job.ctc)}</strong>
+          </>
+        }
+      />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <section className="space-y-6 lg:col-span-2">
-          <div className="card space-y-2">
-            <h2 className="font-semibold">About the role</h2>
-            <p className="whitespace-pre-line leading-relaxed opacity-90">
-              {job.description?.trim() || "No description provided."}
-            </p>
-          </div>
+      <div className="grid items-start gap-5 lg:grid-cols-[1fr_320px]">
+        <div className="space-y-5">
+          <section className="card space-y-3">
+            <h2 className="section-label">About the role</h2>
+            {paragraphs(job.description).map((text) => (
+              <p key={text} className="max-w-prose leading-relaxed">
+                {text}
+              </p>
+            ))}
+            {!job.description && <p className="text-muted">No description provided.</p>}
+          </section>
 
-          <div className="card space-y-3">
-            <h2 className="font-semibold">Required skills</h2>
-            <ul className="space-y-2">
+          <section className="card overflow-hidden p-0">
+            <h2 className="section-label px-5 pt-4 pb-1">Required skills</h2>
+            <ul className="divide-y divide-line">
               {job.skills.map((skill) => (
-                <li key={skill.name} className="flex items-center justify-between gap-3 text-sm">
-                  <span>
-                    {skill.my_level ? "✓" : "✗"} {skill.name}
-                    <span className="opacity-60"> · importance {Math.round(skill.weight * 100)}%</span>
+                <li key={skill.name} className="flex items-center justify-between gap-3 px-5 py-3">
+                  <span className="flex items-center gap-3">
+                    <span
+                      className={`grid h-[18px] w-[18px] place-items-center rounded border ${
+                        skill.my_level ? "border-success-line bg-success-soft text-success" : "border-line-strong text-muted"
+                      }`}
+                      aria-hidden
+                    >
+                      {skill.my_level ? <Check size={12} strokeWidth={3} /> : <X size={12} strokeWidth={3} />}
+                    </span>
+                    <span>{skill.name}</span>
+                    <span className="chip chip-gray">weight {Math.round(skill.weight * 100)}%</span>
                   </span>
-                  <span className={skill.my_level ? "text-green-700 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
-                    {skill.my_level ? `You: ${skill.my_level.toLowerCase()}` : "Missing"}
+                  <span className={skill.my_level ? "chip chip-green" : "chip chip-red"}>
+                    {skill.my_level ? `you: ${skill.my_level.toLowerCase()}` : "missing"}
                   </span>
                 </li>
               ))}
             </ul>
-          </div>
+          </section>
 
           {job.rounds.length > 0 && (
-            <div className="card space-y-2">
-              <h2 className="font-semibold">Selection process</h2>
-              <ol className="list-inside list-decimal space-y-1 text-sm">
+            <section className="card overflow-hidden p-0">
+              <h2 className="section-label px-5 pt-4 pb-1">Selection process</h2>
+              <ol className="divide-y divide-line">
                 {job.rounds.map((round) => (
-                  <li key={round.round_no}>
-                    {round.round_name} <span className="opacity-60">({round.round_type.replace(/_/g, " ").toLowerCase()})</span>
+                  <li key={round.round_no} className="flex items-baseline gap-3 px-5 py-3">
+                    <span className="font-mono text-sm font-bold text-muted">{round.round_no}.</span>
+                    <span>{round.round_name}</span>
+                    <span className="chip chip-gray">{round.round_type.replace(/_/g, " ").toLowerCase()}</span>
                   </li>
                 ))}
               </ol>
-            </div>
+            </section>
           )}
-        </section>
+        </div>
 
-        <aside className="space-y-4">
-          <div className="card space-y-4">
+        <aside className="space-y-5">
+          <section className="card space-y-4">
+            <h2 className="section-label">How well you fit</h2>
             <ScoreBar label="Resume fit" value={job.similarity} />
             <ScoreBar label="Match score" value={job.match_score} />
-            <p className="text-xs opacity-60">Match score = 80% resume fit + 20% CGPA.</p>
-          </div>
+            <p className="text-xs text-muted">Match score is 80% resume fit and 20% CGPA.</p>
+          </section>
 
-          <div className="card space-y-3">
-            <h2 className="font-semibold">Eligibility</h2>
-            <ul className="space-y-1 text-sm">
+          <section className="card space-y-3">
+            <h2 className="section-label">Eligibility</h2>
+            <ul className="space-y-2 text-sm">
               {checks.map((check) => (
-                <li key={check.text} className={check.ok ? "" : "text-red-600 dark:text-red-400"}>
-                  {check.ok ? "✓" : "✗"} {check.text}
+                <li key={check.text} className="flex items-start gap-2.5">
+                  <span
+                    className={`mt-0.5 grid h-[18px] w-[18px] shrink-0 place-items-center rounded border ${
+                      check.ok ? "border-success-line bg-success-soft text-success" : "border-danger-line bg-danger-soft text-danger"
+                    }`}
+                    aria-hidden
+                  >
+                    {check.ok ? <Check size={12} strokeWidth={3} /> : <X size={12} strokeWidth={3} />}
+                  </span>
+                  <span className={check.ok ? "" : "text-danger"}>{check.text}</span>
                 </li>
               ))}
             </ul>
             {job.my_status ? (
-              <p>
-                Your application:{" "}
-                <span className={`rounded-full px-3 py-1 text-sm font-medium ${STATUS_STYLE[job.my_status]}`}>
-                  {job.my_status}
-                </span>
+              <p className="text-sm">
+                Your application: <span className={STATUS_STYLE[job.my_status]}>{job.my_status.toLowerCase()}</span>
               </p>
             ) : job.status === "OPEN" ? (
               // Shown even when a check fails: the database trigger makes the
               // final decision and explains any refusal.
               <ApplyButton jobId={job.job_id} />
             ) : null}
-          </div>
+          </section>
         </aside>
       </div>
     </main>

@@ -1,3 +1,4 @@
+import AuthLayout from "@/components/AuthLayout";
 import LoginForm from "@/components/LoginForm";
 
 type Props = { searchParams: Promise<{ next?: string }> };
@@ -14,10 +15,8 @@ export default async function LoginPage({ searchParams }: Props) {
   const { next } = await searchParams;
 
   return (
-    <main className="mx-auto max-w-md px-6 py-16">
-      <h1 className="mb-2 text-3xl font-bold tracking-tight">Log in</h1>
-      <p className="mb-8 opacity-70">Students, recruiters and placement officers all log in here.</p>
+    <AuthLayout title="Welcome" accent="back" subtitle="Students, recruiters and placement officers all log in here.">
       <LoginForm next={safeNext(next)} />
-    </main>
+    </AuthLayout>
   );
 }

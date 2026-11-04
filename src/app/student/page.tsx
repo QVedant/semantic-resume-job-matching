@@ -1,8 +1,10 @@
 import Link from "next/link";
-import JobCard from "@/components/student/JobCard";
+import JobRow from "@/components/student/JobCard";
+import PageHeader from "@/components/ui/PageHeader";
+import { getStudentApplications } from "@/lib/applications";
 import { requireStudent } from "@/lib/auth";
 import { query } from "@/lib/db";
-import { STATUS_STYLE } from "@/lib/format";
+import { companyText, formatPercent, STATUS_STYLE } from "@/lib/format";
 import { searchJobs } from "@/lib/jobs";
 
 type Profile = {
@@ -14,81 +16,115 @@ type Profile = {
   has_resume: boolean;
 };
 
-// Student dashboard: profile, applications by status (GROUP BY), and the
-// top 3 recommended jobs from the vector search.
+// Student dashboard: best matches (vector search), latest applications and
+// the profile, with the totals in the summary line.
 export default async function StudentDashboard() {
   const { studentId } = await requireStudent();
 
-  const [[profile], statusCounts, topJobs] = await Promise.all([
+  const [[profile], applications, topJobs] = await Promise.all([
     query<Profile>(
       `SELECT full_name, usn, branch, cgpa, grad_year,
               (resume_text IS NOT NULL AND btrim(resume_text) <> '') AS has_resume
        FROM students WHERE student_id = $1`,
       [studentId],
     ),
-    query<{ status: string; count: number }>(
-      `SELECT status::text AS status, COUNT(*)::int AS count
-       FROM applications WHERE student_id = $1
-       GROUP BY status ORDER BY count DESC`,
-      [studentId],
-    ),
-    searchJobs(studentId, { mode: "recommended", limit: 3 }),
+    getStudentApplications(studentId),
+    searchJobs(studentId, { mode: "recommended", limit: 4 }),
   ]);
-  const totalApplications = statusCounts.reduce((sum, row) => sum + row.count, 0);
+  const count = (...statuses: string[]) => applications.filter((a) => statuses.includes(a.status)).length;
 
   return (
-    <main className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Welcome, {profile.full_name}</h1>
-
-      <section className="card grid grid-cols-2 gap-4 sm:grid-cols-5">
-        <Info label="USN" value={profile.usn} />
-        <Info label="Branch" value={profile.branch} />
-        <Info label="CGPA" value={profile.cgpa} />
-        <Info label="Graduating" value={profile.grad_year ?? "—"} />
-        <Info label="Applications" value={totalApplications} />
-      </section>
+    <main>
+      <PageHeader
+        title="Welcome,"
+        accent={profile.full_name.split(" ")[0]}
+        description={
+          <>
+            <strong>{applications.length}</strong> applications · <strong>{count("SHORTLISTED")}</strong> shortlisted ·{" "}
+            <strong>{count("OFFERED", "HIRED")}</strong> offers
+          </>
+        }
+      />
 
       {!profile.has_resume && (
-        <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
-          You haven&apos;t written your resume yet, so your matches are based only on your skills list.{" "}
-          <Link href="/student/resume" className="font-medium underline">Add your resume →</Link>
+        <p className="alert-warning mb-5">
+          You haven&apos;t written your resume yet, so these matches use only your skills list.{" "}
+          <Link href="/student/resume" className="link">
+            Write your resume
+          </Link>
         </p>
       )}
 
-      {statusCounts.length > 0 && (
-        <section className="space-y-2">
-          <h2 className="text-lg font-semibold">My applications</h2>
-          <div className="flex flex-wrap gap-2">
-            {statusCounts.map((row) => (
-              <span key={row.status} className={`rounded-full px-3 py-1 text-sm font-medium ${STATUS_STYLE[row.status]}`}>
-                {row.status}: {row.count}
-              </span>
-            ))}
-            <Link href="/student/applications" className="px-2 py-1 text-sm underline">View all →</Link>
+      <div className="grid items-start gap-5 lg:grid-cols-[1fr_320px]">
+        <section className="card overflow-hidden p-0">
+          <div className="flex items-baseline justify-between px-5 pt-4 pb-1">
+            <h2 className="section-label">Best matches for your resume</h2>
+            <Link href="/student/recommended" className="link text-sm">
+              See all
+            </Link>
           </div>
+          {topJobs.length === 0 ? (
+            <p className="px-5 py-6 text-sm text-muted">No open jobs right now. New jobs appear here as soon as they are published.</p>
+          ) : (
+            <ul className="divide-y divide-line">
+              {topJobs.map((job) => (
+                <JobRow key={job.job_id} job={job} scoreLabel="fit" />
+              ))}
+            </ul>
+          )}
         </section>
-      )}
 
-      <section className="space-y-3">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold">Top matches for your resume</h2>
-          <Link href="/student/recommended" className="text-sm underline">See all →</Link>
+        <div className="space-y-5">
+          <section className="card overflow-hidden p-0">
+            <div className="flex items-baseline justify-between px-5 pt-4 pb-1">
+              <h2 className="section-label">My applications</h2>
+              <Link href="/student/applications" className="link text-sm">
+                See all
+              </Link>
+            </div>
+            {applications.length === 0 ? (
+              <p className="px-5 py-4 text-sm text-muted">Nothing yet. Apply from your best matches.</p>
+            ) : (
+              <ul className="divide-y divide-line">
+                {applications.slice(0, 5).map((app) => (
+                  <li key={app.application_id} className="space-y-1.5 px-5 py-3">
+                    <p className="flex flex-wrap items-baseline gap-x-2">
+                      <span className={`text-[13px] font-medium ${companyText(app.company_id)}`}>{app.company_name}</span>
+                      <span className="text-[15px]">{app.job_title}</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className={STATUS_STYLE[app.status]}>{app.status.toLowerCase()}</span>
+                      <span className="chip chip-gray">match {formatPercent(app.match_score)}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="card space-y-3">
+            <h2 className="section-label">Profile</h2>
+            <dl className="space-y-2 text-sm">
+              <Fact label="USN" value={profile.usn} mono />
+              <Fact label="Branch" value={profile.branch} />
+              <Fact label="CGPA" value={profile.cgpa} mono />
+              <Fact label="Graduating" value={String(profile.grad_year ?? "—")} mono />
+            </dl>
+            <Link href="/student/resume" className="link text-sm">
+              {profile.has_resume ? "Edit resume" : "Write your resume"}
+            </Link>
+          </section>
         </div>
-        {topJobs.length === 0 ? (
-          <p className="opacity-70">No open jobs right now.</p>
-        ) : (
-          topJobs.map((job) => <JobCard key={job.job_id} job={job} similarityLabel="Resume fit" />)
-        )}
-      </section>
+      </div>
     </main>
   );
 }
 
-function Info({ label, value }: { label: string; value: string | number }) {
+function Fact({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div>
-      <p className="text-sm opacity-70">{label}</p>
-      <p className="text-lg font-semibold">{value}</p>
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="text-muted">{label}</dt>
+      <dd className={mono ? "font-mono font-bold" : "font-medium"}>{value}</dd>
     </div>
   );
 }

@@ -34,7 +34,7 @@ export default function JobStatusButton({ jobId, status }: { jobId: number; stat
     return (
       <span className="flex items-center gap-2 text-sm">
         Close applications?
-        <button type="button" onClick={change} disabled={busy} className="rounded-lg bg-red-600 px-3 py-1 font-medium text-white hover:bg-red-700 disabled:opacity-50">
+        <button type="button" onClick={change} disabled={busy} className="btn-danger px-3 py-1 text-sm">
           {busy ? "Closing…" : "Yes, close"}
         </button>
         <button type="button" onClick={() => setConfirming(false)} className="btn-secondary px-3 py-1 text-sm">Cancel</button>
@@ -52,7 +52,7 @@ export default function JobStatusButton({ jobId, status }: { jobId: number; stat
       >
         {busy ? "Saving…" : target === "OPEN" ? "Publish" : "Close applications"}
       </button>
-      {error && <span className="block text-sm text-red-600 dark:text-red-400">{error}</span>}
+      {error && <span className="block text-sm text-danger">{error}</span>}
     </span>
   );
 }

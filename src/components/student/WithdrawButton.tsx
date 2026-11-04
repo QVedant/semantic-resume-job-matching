@@ -34,7 +34,7 @@ export default function WithdrawButton({ applicationId }: { applicationId: numbe
         <button type="button" onClick={() => setConfirming(true)} className="btn-secondary px-3 py-1 text-sm">
           Withdraw
         </button>
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
       </div>
     );
   }
@@ -45,7 +45,7 @@ export default function WithdrawButton({ applicationId }: { applicationId: numbe
         type="button"
         onClick={withdraw}
         disabled={busy}
-        className="rounded-lg bg-red-600 px-3 py-1 font-medium text-white hover:bg-red-700 disabled:opacity-50"
+        className="btn-danger px-3 py-1 text-sm"
       >
         {busy ? "Withdrawing…" : "Yes, withdraw"}
       </button>

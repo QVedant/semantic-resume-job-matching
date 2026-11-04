@@ -2,16 +2,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ApplicantActions from "@/components/recruiter/ApplicantActions";
 import JobStatusButton from "@/components/recruiter/JobStatusButton";
-import { formatCtc, formatDate, formatPercent, STATUS_STYLE } from "@/lib/format";
+import EmptyState from "@/components/ui/EmptyState";
+import PageHeader from "@/components/ui/PageHeader";
+import { formatCtc, formatPercent, formatShortDate, JOB_STATUS_STYLE, paragraphs, STATUS_STYLE } from "@/lib/format";
 import { getJobWithApplicants, parseId, requireRecruiter } from "@/lib/recruiter";
 import { currentRound } from "@/lib/rounds";
 
 type Props = { params: Promise<{ id: string }> };
 
-const RESULT_STYLE: Record<string, string> = {
-  PASSED: "text-green-700 dark:text-green-400",
-  PENDING: "text-amber-700 dark:text-amber-300",
-  REJECTED: "text-red-600 dark:text-red-400",
+const ROUND_CHIP: Record<string, string> = {
+  PASSED: "chip chip-green",
+  PENDING: "chip chip-amber",
+  REJECTED: "chip chip-red",
 };
 
 // One of the recruiter's jobs, with its applicants ranked by semantic match score.
@@ -24,82 +26,101 @@ export default async function RecruiterJobPage({ params }: Props) {
   if (!job) notFound(); // not found, or posted by someone else
 
   return (
-    <main className="space-y-6">
-      <Link href="/recruiter/jobs" className="text-sm underline">← My jobs</Link>
+    <main>
+      <Link href="/recruiter/jobs" className="link text-sm">
+        My jobs
+      </Link>
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">{job.title}</h1>
-          <p className="opacity-80">
-            {job.location} · {formatCtc(job.ctc)} · Min CGPA {job.min_cgpa ?? "—"} · {job.eligible_branches} · Apply by{" "}
-            {formatDate(job.deadline)}
-          </p>
-          <p className="text-sm">
-            Status: <strong>{job.status}</strong>
-          </p>
-        </div>
-        <JobStatusButton jobId={job.job_id} status={job.status} />
-      </header>
+      <PageHeader
+        title={job.title}
+        description={
+          <span className="inline-flex flex-wrap items-center gap-1.5 align-middle">
+            <span className={JOB_STATUS_STYLE[job.status]}>{job.status.toLowerCase()}</span>
+            <span className="chip chip-gray">{job.location ?? "anywhere"}</span>
+            <span className="chip chip-gray">{formatCtc(job.ctc)}</span>
+            <span className="chip chip-gray">cgpa {job.min_cgpa ?? "—"}+</span>
+            <span className="chip chip-gray">{job.eligible_branches}</span>
+            <span className="chip chip-gray">apply by {formatShortDate(job.deadline)}</span>
+          </span>
+        }
+        actions={<JobStatusButton jobId={job.job_id} status={job.status} />}
+      />
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">
-          Applicants ({job.applicants.length}), ranked by match score
-        </h2>
-        <p className="text-sm opacity-70">
-          Match score = 80% semantic similarity between the resume and this job description + 20% CGPA.
-        </p>
+      <p className="mb-4 text-[15px] text-muted">
+        <strong className="font-semibold text-foreground">{job.applicants.length}</strong> applicants, ranked by match
+        score: 80% how closely the resume matches this job&apos;s meaning, 20% CGPA.
+      </p>
 
-        {job.applicants.length === 0 ? (
-          <p className="opacity-70">No applications yet.</p>
-        ) : (
-          job.applicants.map((applicant) => (
-            <article key={applicant.application_id} className="card space-y-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex items-start gap-4">
-                  <span className="text-3xl font-bold opacity-30">#{applicant.rank}</span>
-                  <div>
-                    <p className="text-lg font-semibold">{applicant.full_name}</p>
-                    <p className="text-sm opacity-80">
-                      {applicant.usn} · {applicant.branch} · CGPA {applicant.cgpa} · applied {formatDate(applicant.applied_at)}
-                    </p>
-                    {applicant.skills && <p className="text-xs opacity-60">Skills: {applicant.skills}</p>}
+      {job.applicants.length === 0 ? (
+        <EmptyState title="No applications yet">
+          Students who apply appear here, ranked by how well their resume matches this job.
+        </EmptyState>
+      ) : (
+        <ol className="space-y-4">
+          {job.applicants.map((applicant) => {
+            const upNext = currentRound(applicant.rounds)?.round_no;
+            return (
+              <li key={applicant.application_id} className="card space-y-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex items-start gap-4">
+                    <span className="font-display text-4xl leading-none text-accent-ink italic">#{applicant.rank}</span>
+                    <div className="space-y-1.5">
+                      <p className="text-[17px] font-medium">{applicant.full_name}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className="chip chip-gray">{applicant.usn}</span>
+                        <span className="chip chip-gray">{applicant.branch}</span>
+                        <span className="chip chip-gray">cgpa {applicant.cgpa}</span>
+                        <span className="chip chip-gray">applied {formatShortDate(applicant.applied_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <span className="font-mono text-2xl font-bold">{formatPercent(applicant.match_score)}</span>
+                    <span className={STATUS_STYLE[applicant.status]}>{applicant.status.toLowerCase()}</span>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <span className="text-2xl font-semibold">{formatPercent(applicant.match_score)}</span>
-                  <span className={`rounded-full px-3 py-1 text-sm font-medium ${STATUS_STYLE[applicant.status]}`}>
-                    {applicant.status}
-                  </span>
-                </div>
-              </div>
 
-              {applicant.resume_text && (
-                <details className="text-sm">
-                  <summary className="cursor-pointer font-medium">Resume</summary>
-                  <p className="mt-2 whitespace-pre-line leading-relaxed opacity-90">{applicant.resume_text.trim()}</p>
-                </details>
-              )}
+                {applicant.skills && <p className="text-sm text-muted">Skills: {applicant.skills}</p>}
 
-              {applicant.rounds.length > 0 && (
-                <ol className="flex flex-wrap gap-2 text-sm">
-                  {applicant.rounds.map((round) => (
-                    <li key={round.round_id} className="rounded-lg border border-black/10 px-3 py-1.5 dark:border-white/15">
-                      {round.round_no}. {round.round_name}:{" "}
-                      <span className={round.result ? RESULT_STYLE[round.result] : "opacity-50"}>
-                        {round.result ??
-                          (round.round_no === currentRound(applicant.rounds)?.round_no ? "up next" : "not reached")}
-                      </span>
-                      {round.feedback && <span className="opacity-60"> · “{round.feedback}”</span>}
-                    </li>
-                  ))}
-                </ol>
-              )}
+                {applicant.resume_text && (
+                  <details className="text-sm">
+                    <summary className="link cursor-pointer">Show resume</summary>
+                    <div className="mt-2 max-w-prose space-y-2 leading-relaxed">
+                      {paragraphs(applicant.resume_text).map((text) => (
+                        <p key={text}>{text}</p>
+                      ))}
+                    </div>
+                  </details>
+                )}
 
-              <ApplicantActions applicant={applicant} />
-            </article>
-          ))
-        )}
-      </section>
+                {applicant.rounds.length > 0 && (
+                  <ol className="flex flex-wrap items-center gap-1.5" aria-label="Interview rounds">
+                    {applicant.rounds.map((round) => (
+                      <li key={round.round_id} className="flex items-center gap-1.5">
+                        <span
+                          className={
+                            round.result
+                              ? ROUND_CHIP[round.result]
+                              : round.round_no === upNext
+                                ? "chip chip-blue"
+                                : "chip chip-gray opacity-70"
+                          }
+                        >
+                          {round.round_no}. {round.round_name.toLowerCase()} ·{" "}
+                          {round.result?.toLowerCase() ?? (round.round_no === upNext ? "up next" : "not reached")}
+                        </span>
+                        {round.feedback && <span className="text-xs text-muted">“{round.feedback}”</span>}
+                      </li>
+                    ))}
+                  </ol>
+                )}
+
+                <ApplicantActions applicant={applicant} />
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </main>
   );
 }

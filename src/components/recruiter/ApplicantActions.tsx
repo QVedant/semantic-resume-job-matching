@@ -61,53 +61,45 @@ export default function ApplicantActions({ applicant }: { applicant: Applicant }
     });
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2 border-t border-line pt-4">
       {canRecordRound && (
-        <div className="space-y-2 rounded-lg border border-black/10 p-3 dark:border-white/15">
-          <p className="text-sm font-medium">
-            Round {pendingRound.round_no}: {pendingRound.round_name}
-          </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor={`feedback-${applicant.application_id}`} className="text-sm whitespace-nowrap">
+            Round {pendingRound.round_no}, {pendingRound.round_name}:
+          </label>
           <input
+            id={`feedback-${applicant.application_id}`}
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
             placeholder="Feedback (optional)"
-            className="input text-sm"
+            className="input w-auto min-w-48 flex-1 py-1.5 text-sm"
             maxLength={500}
           />
-          <div className="flex gap-2">
-            <button type="button" disabled={busy} onClick={() => recordRound("PASSED")} className="btn-primary px-3 py-1 text-sm">
-              Passed
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => recordRound("REJECTED")}
-              className="rounded-lg bg-red-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
-            >
-              Failed
-            </button>
-          </div>
+          <button type="button" disabled={busy} onClick={() => recordRound("PASSED")} className="btn-primary px-3 py-1.5">
+            Passed
+          </button>
+          <button type="button" disabled={busy} onClick={() => recordRound("REJECTED")} className="btn-danger-outline px-3 py-1.5">
+            Failed
+          </button>
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted">Decision:</span>
         {(ACTIONS[applicant.status] ?? []).map((action) => (
           <button
             key={action.status}
             type="button"
             disabled={busy}
             onClick={() => setStatus(action.status)}
-            className={
-              action.danger
-                ? "rounded-lg border border-red-500/50 px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-500/10 disabled:opacity-50 dark:text-red-300"
-                : "btn-secondary px-3 py-1 text-sm"
-            }
+            className={action.danger ? "btn-danger-outline px-3 py-1.5" : "btn-secondary px-3 py-1.5"}
           >
             {action.label}
           </button>
         ))}
+        {!ACTIONS[applicant.status] && <span className="text-sm text-muted">final ({applicant.status.toLowerCase()})</span>}
       </div>
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }

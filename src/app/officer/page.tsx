@@ -1,122 +1,113 @@
 import Link from "next/link";
 import Bar from "@/components/officer/Bar";
+import PageHeader from "@/components/ui/PageHeader";
 import { requireRole } from "@/lib/auth";
-import { query } from "@/lib/db";
-import { formatCtc, formatPercent, STATUS_STYLE } from "@/lib/format";
+import { companyDot, companyText, formatCtc, formatPercent, STATUS_STYLE } from "@/lib/format";
 import { getBranchStats, getCompanyStats, getOverview, getStatusCounts } from "@/lib/officer";
-
-type OfficerProfile = { full_name: string; employee_id: string; department: string | null };
 
 // Placement officer dashboard: campus-wide statistics, mostly computed from
 // the view vw_application_overview with GROUP BY and COUNT ... FILTER.
 export default async function OfficerDashboard() {
-  const session = await requireRole("PLACEMENT_OFFICER");
-  const [[profile], overview, branches, statuses, companies] = await Promise.all([
-    query<OfficerProfile>(`SELECT full_name, employee_id, department FROM placement_officers WHERE user_id = $1`, [
-      session.userId,
-    ]),
+  await requireRole("PLACEMENT_OFFICER");
+  const [overview, branches, statuses, companies] = await Promise.all([
     getOverview(),
     getBranchStats(),
     getStatusCounts(),
     getCompanyStats(),
   ]);
-  const placementPct = overview.students ? Math.round((100 * overview.placed) / overview.students) : 0;
   const maxStatus = Math.max(1, ...statuses.map((s) => s.count));
 
   return (
-    <main className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Placement overview</h1>
-        <p className="opacity-70">
-          {profile.full_name} · {profile.department} · Employee ID {profile.employee_id}
-        </p>
-      </div>
+    <main>
+      <PageHeader
+        title="Placement,"
+        accent="overview"
+        description={
+          <>
+            <strong>
+              {overview.placed} of {overview.students}
+            </strong>{" "}
+            students placed · <strong>{overview.open_jobs}</strong> open jobs · <strong>{overview.applications}</strong>{" "}
+            applications · average match <strong>{formatPercent(overview.avg_match)}</strong> · highest offer{" "}
+            <strong>{overview.highest_offer ? formatCtc(overview.highest_offer) : "—"}</strong>
+          </>
+        }
+      />
 
-      <section className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <Kpi label="Students" value={overview.students} />
-        <Kpi label="Placed" value={`${overview.placed} (${placementPct}%)`} />
-        <Kpi label="Open jobs" value={overview.open_jobs} />
-        <Kpi label="Applications" value={overview.applications} />
-        <Kpi label="Avg match score" value={formatPercent(overview.avg_match)} />
-        <Kpi label="Highest offer" value={overview.highest_offer ? formatCtc(overview.highest_offer) : "—"} />
-      </section>
-
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid items-start gap-5 lg:grid-cols-2">
         <section className="card space-y-4">
-          <h2 className="font-semibold">Placement by branch</h2>
+          <h2 className="section-label">Placed, by branch</h2>
           {branches.map((b) => (
             <Bar
               key={b.branch}
-              label={`${b.branch} · ${b.students} student${b.students === 1 ? "" : "s"} · avg CGPA ${b.avg_cgpa.toFixed(2)}`}
+              label={
+                <>
+                  <span className="font-medium">{b.branch}</span>{" "}
+                  <span className="text-muted">
+                    {b.students} student{b.students === 1 ? "" : "s"}, avg CGPA {b.avg_cgpa.toFixed(2)}
+                  </span>
+                </>
+              }
               value={b.placement_pct}
               max={100}
-              display={`${b.placed}/${b.students} placed (${b.placement_pct}%)`}
+              display={`${b.placed}/${b.students}`}
             />
           ))}
         </section>
 
-        <section className="card space-y-4">
-          <h2 className="font-semibold">Applications by status</h2>
-          {statuses.map((s) => (
-            <div key={s.status} className="flex items-center gap-3">
-              <span className={`w-28 shrink-0 rounded-full px-2.5 py-0.5 text-center text-xs font-medium ${STATUS_STYLE[s.status]}`}>
-                {s.status}
-              </span>
-              <div className="flex-1">
-                <Bar label="" value={s.count} max={maxStatus} />
-              </div>
-              <Link href={`/officer/applications?status=${s.status}`} className="text-sm underline">
-                View
-              </Link>
-            </div>
-          ))}
+        <section className="card overflow-hidden p-0">
+          <h2 className="section-label px-5 pt-4 pb-1">Applications, by status</h2>
+          <ul className="divide-y divide-line">
+            {statuses.map((s) => (
+              <li key={s.status}>
+                <Link
+                  href={`/officer/applications?status=${s.status}`}
+                  className="flex items-center gap-4 px-5 py-3 transition hover:bg-surface-muted"
+                >
+                  <span className={`${STATUS_STYLE[s.status]} w-24 justify-center`}>{s.status.toLowerCase()}</span>
+                  <span className="flex-1">
+                    <Bar value={s.count} max={maxStatus} display={String(s.count)} />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
       </div>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Companies</h2>
-        <div className="card overflow-x-auto p-0">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-black/10 text-xs uppercase opacity-70 dark:border-white/15">
-              <tr>
-                <th className="px-4 py-3">Company</th>
-                <th className="px-4 py-3">Industry</th>
-                <th className="px-4 py-3 text-right">Jobs (open)</th>
-                <th className="px-4 py-3 text-right">Applications</th>
-                <th className="px-4 py-3 text-right">Offers</th>
-                <th className="px-4 py-3 text-right">Top CTC</th>
+      <section className="card mt-5 overflow-x-auto p-0">
+        <table className="w-full text-left text-sm">
+          <thead className="table-head">
+            <tr>
+              <th className="px-5 py-3 font-semibold">Company</th>
+              <th className="px-3 py-3 font-semibold">Industry</th>
+              <th className="px-3 py-3 text-right font-semibold">Jobs (open)</th>
+              <th className="px-3 py-3 text-right font-semibold">Applications</th>
+              <th className="px-3 py-3 text-right font-semibold">Offers</th>
+              <th className="px-5 py-3 text-right font-semibold">Top CTC</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {companies.map((c) => (
+              <tr key={c.company_id} className="transition hover:bg-surface-muted">
+                <td className="px-5 py-3">
+                  <Link href={`/officer/applications?company=${c.company_id}`} className="flex items-center gap-2.5 font-medium hover:underline">
+                    <span className={`h-2.5 w-2.5 rounded-[3px] ${companyDot(c.company_id)}`} aria-hidden />
+                    <span className={companyText(c.company_id)}>{c.company}</span>
+                  </Link>
+                </td>
+                <td className="px-3 py-3 text-muted">{c.industry ?? "—"}</td>
+                <td className="px-3 py-3 text-right font-mono font-bold">
+                  {c.jobs} ({c.open_jobs})
+                </td>
+                <td className="px-3 py-3 text-right font-mono font-bold">{c.applications}</td>
+                <td className="px-3 py-3 text-right font-mono font-bold">{c.offers}</td>
+                <td className="px-5 py-3 text-right font-mono font-bold">{c.top_ctc ? formatCtc(c.top_ctc) : "—"}</td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-black/10 dark:divide-white/15">
-              {companies.map((c) => (
-                <tr key={c.company_id}>
-                  <td className="px-4 py-3 font-medium">
-                    <Link href={`/officer/applications?company=${c.company_id}`} className="hover:underline">
-                      {c.company}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 opacity-80">{c.industry ?? "—"}</td>
-                  <td className="px-4 py-3 text-right">
-                    {c.jobs} ({c.open_jobs})
-                  </td>
-                  <td className="px-4 py-3 text-right">{c.applications}</td>
-                  <td className="px-4 py-3 text-right">{c.offers}</td>
-                  <td className="px-4 py-3 text-right">{c.top_ctc ? formatCtc(c.top_ctc) : "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </section>
     </main>
-  );
-}
-
-function Kpi({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="card p-4">
-      <p className="text-xs opacity-70">{label}</p>
-      <p className="text-xl font-semibold">{value}</p>
-    </div>
   );
 }

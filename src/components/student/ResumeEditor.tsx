@@ -40,34 +40,34 @@ export default function ResumeEditor({ initialText }: { initialText: string }) {
 
   return (
     <form onSubmit={save} className="card space-y-3">
-      <label htmlFor="resume" className="label">
-        Your resume: skills, projects, internships and achievements, in plain sentences
+      <label htmlFor="resume" className="section-label block">
+        Resume text
       </label>
       <textarea
         id="resume"
-        rows={14}
+        rows={13}
         value={text}
         onChange={(e) => {
           setText(e.target.value);
           setSaved(false);
         }}
-        className={`input font-normal leading-relaxed ${tooLong || error ? "input-invalid" : ""}`}
-        placeholder="e.g. Final-year CSE student who built REST APIs in Node.js with PostgreSQL..."
+        className={`input leading-relaxed ${tooLong || error ? "input-invalid" : ""}`}
+        placeholder="e.g. Final-year CSE student who built REST APIs in Node.js with PostgreSQL…"
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className={`text-sm ${tooLong ? "font-medium text-red-600 dark:text-red-400" : "opacity-70"}`}>
-          {words} / {MAX_TEXT_WORDS} words
+        <span className={`chip ${tooLong ? "chip-red" : "chip-gray"}`}>
+          {words}/{MAX_TEXT_WORDS} words
         </span>
         <button type="submit" disabled={busy || tooLong || words === 0} className="btn-primary">
-          {busy ? "Analysing with AI…" : "Save and update my matches"}
+          {busy ? "Analysing…" : "Save and update matches"}
         </button>
       </div>
       {error && <p className="alert-error">{error}</p>}
       {saved && (
-        <p className="text-sm font-medium text-green-700 dark:text-green-400">
-          ✓ Saved. Your resume was re-analysed and your matches were updated.{" "}
-          <Link href="/student/recommended" className="underline">
-            See recommended jobs →
+        <p className="alert-success">
+          Saved. Your resume was analysed again and your matches are updated.{" "}
+          <Link href="/student/recommended" className="link">
+            See your matches
           </Link>
         </p>
       )}
