@@ -17,6 +17,7 @@ SET client_min_messages TO WARNING;
 --    Children are dropped before parents. CASCADE also removes any
 --    indexes / constraints that depend on the dropped object.
 -- ---------------------------------------------------------------------
+DROP TABLE IF EXISTS resume_files          CASCADE;  -- Stage 3 table (resume_files.sql)
 DROP TABLE IF EXISTS application_rounds    CASCADE;
 DROP TABLE IF EXISTS interview_rounds      CASCADE;
 DROP TABLE IF EXISTS applications          CASCADE;

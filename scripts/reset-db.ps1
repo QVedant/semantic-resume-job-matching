@@ -29,7 +29,7 @@ $answer = Read-Host "Type RESET to continue"
 if ($answer -ne "RESET") { Write-Host "Cancelled. Nothing was changed."; exit 0 }
 
 # Same order as SETUP.md: structure, then rules, then data.
-$files = "schema", "alter_drop", "embeddings_alter", "triggers", "seed", "seed_text"
+$files = "schema", "alter_drop", "embeddings_alter", "resume_files", "triggers", "seed", "seed_text"
 foreach ($file in $files) {
     Write-Host "Running sql/$file.sql ..."
     psql -h $dbHost -p $dbPort -U $dbUser -d $dbName -w -X -q -v ON_ERROR_STOP=1 -f "sql/$file.sql" | Out-Null

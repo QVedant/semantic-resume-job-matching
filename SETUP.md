@@ -214,6 +214,13 @@ psql -U postgres -d placement_db -f sql/embeddings_alter.sql
 lines. Students now have a `resume_text` column, and jobs have a `description` column,
 each limited to 300 words.
 
+### 5c-4. Add the table for uploaded resume PDFs
+```powershell
+psql -U postgres -d placement_db -f sql/resume_files.sql
+```
+✅ **Check:** you see `CREATE TABLE`, with no `ERROR` lines. Students' uploaded PDFs are
+stored in this table (max 2 MB each, PDFs only; the database itself enforces both).
+
 ### 5d. Load the sample data
 ```powershell
 psql -U postgres -d placement_db -f sql/seed.sql
@@ -297,7 +304,7 @@ applications.
 ```powershell
 npm run db:reset
 ```
-It asks you to type `RESET` to confirm, then re-runs 5b → 5c → 5c-2 → 5c-3 → 5d → 5e and
+It asks you to type `RESET` to confirm, then re-runs 5b → 5c → 5c-3 → 5c-4 → 5c-2 → 5d → 5e and
 `npm run embed:all` for you, using the password from `.env`. **It deletes everything
 in the database**, including accounts and jobs created through the website.
 

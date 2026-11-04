@@ -94,7 +94,14 @@ export default async function StudentsPage({ searchParams }: Props) {
                   <td className="px-3 py-3">{s.branch}</td>
                   <td className="px-3 py-3 text-right font-mono font-bold">{s.cgpa}</td>
                   <td className="px-3 py-3">
-                    <span className={s.has_resume ? "chip chip-green" : "chip chip-amber"}>{s.has_resume ? "added" : "missing"}</span>
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      <span className={s.has_resume ? "chip chip-green" : "chip chip-amber"}>{s.has_resume ? "text" : "no text"}</span>
+                      {s.has_pdf && (
+                        <a href={`/api/resumes/${s.student_id}`} target="_blank" rel="noreferrer" className="chip chip-blue hover:underline">
+                          pdf
+                        </a>
+                      )}
+                    </span>
                   </td>
                   <td className="px-3 py-3 text-right font-mono font-bold">
                     {s.applications > 0 ? (

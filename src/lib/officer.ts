@@ -180,6 +180,7 @@ export type StudentRow = {
   cgpa: string;
   grad_year: number | null;
   has_resume: boolean;
+  has_pdf: boolean;
   applications: number;
   shortlisted: number;
   offers: number;
@@ -212,6 +213,7 @@ export async function searchStudents(filters: { q?: string; branch?: string; sho
   return query<StudentRow>(
     `SELECT s.student_id, s.usn, s.full_name, s.branch, s.cgpa, s.grad_year,
             (s.resume_text IS NOT NULL AND btrim(s.resume_text) <> '')            AS has_resume,
+            EXISTS (SELECT 1 FROM resume_files f WHERE f.student_id = s.student_id) AS has_pdf,
             COUNT(a.application_id)::int                                          AS applications,
             COUNT(a.application_id) FILTER (WHERE a.status = 'SHORTLISTED')::int  AS shortlisted,
             ${placed}::int                                                        AS offers

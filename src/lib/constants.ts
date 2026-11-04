@@ -18,6 +18,9 @@ export function todayIso(): string {
   return new Date().toLocaleDateString("en-CA");
 }
 
+// Uploaded resume PDFs: at most 2 MB (same limit as chk_resume_file_size).
+export const MAX_PDF_BYTES = 2 * 1024 * 1024;
+
 // Resume texts and job descriptions are limited to 300 words: about the most
 // the embedding model reads in one pass. The database enforces the same limit
 // (CHECK word_count(...) <= 300 in sql/embeddings_alter.sql).

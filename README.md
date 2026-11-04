@@ -54,6 +54,7 @@ sql/
   triggers_test.sql     demonstrations of the function, trigger and view
   embeddings_alter.sql  resume_text / description columns, word_count() + 300-word CHECKs
   seed_text.sql         sample resume texts and job descriptions
+  resume_files.sql      uploaded resume PDFs stored as BYTEA (PDF signature + 2 MB CHECKs)
 scripts/
   download-model.ts     one-time download of the embedding model (npm run model:download)
   embed-all.ts          embed every resume and job, recompute matches (npm run embed:all)
@@ -63,7 +64,9 @@ src/
     (public)/           home, login, register, access denied (route group: not in the URL)
     api/auth/           register / login / logout
     api/match/          vector similarity search: jobs ranked for the logged-in student
-    api/student/resume/ save resume text -> embed -> refresh matches (one transaction)
+    api/student/resume/ save resume text -> embed -> refresh matches (one transaction);
+                        /pdf: upload (text extracted) or remove the resume PDF
+    api/resumes/[id]/   download a resume PDF (student, officer, or a recruiter they applied to)
     api/applications/   apply (transaction + eligibility trigger) and withdraw
     student/            dashboard, recommended jobs, browse/search (keyword or by meaning),
                         job detail with skill gap, my applications, resume editor
@@ -91,6 +94,7 @@ src/
   lib/recruiter.ts      recruiter jobs, post-job transaction, applicant ranking (RANK()),
                         status changes, round results (UPSERT, row lock)
   lib/rounds.ts         current interview round helper
+  lib/resumeFiles.ts    PDF text extraction (unpdf), store/replace/remove, download permissions
   lib/officer.ts        campus statistics and searchable application / student lists
   middleware.ts         role-based route guard
 .env.example            template for the git-ignored .env (database URL, JWT secret)

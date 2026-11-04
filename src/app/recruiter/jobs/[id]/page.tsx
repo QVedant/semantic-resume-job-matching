@@ -82,15 +82,24 @@ export default async function RecruiterJobPage({ params }: Props) {
 
                 {applicant.skills && <p className="text-sm text-muted">Skills: {applicant.skills}</p>}
 
-                {applicant.resume_text && (
-                  <details className="text-sm">
-                    <summary className="link cursor-pointer">Show resume</summary>
-                    <div className="mt-2 max-w-prose space-y-2 leading-relaxed">
-                      {paragraphs(applicant.resume_text).map((text) => (
-                        <p key={text}>{text}</p>
-                      ))}
-                    </div>
-                  </details>
+                {(applicant.resume_text || applicant.has_pdf) && (
+                  <div className="flex flex-wrap items-start gap-x-5 gap-y-2 text-sm">
+                    {applicant.has_pdf && (
+                      <a href={`/api/resumes/${applicant.student_id}`} target="_blank" rel="noreferrer" className="link">
+                        Open resume PDF
+                      </a>
+                    )}
+                    {applicant.resume_text && (
+                      <details className="basis-full">
+                        <summary className="link cursor-pointer">Show resume text</summary>
+                        <div className="mt-2 max-w-prose space-y-2 leading-relaxed">
+                          {paragraphs(applicant.resume_text).map((text) => (
+                            <p key={text}>{text}</p>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </div>
                 )}
 
                 {applicant.rounds.length > 0 && (

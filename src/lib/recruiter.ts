@@ -191,6 +191,7 @@ export type Applicant = {
   branch: string;
   cgpa: string;
   resume_text: string | null;
+  has_pdf: boolean; // an uploaded PDF exists in resume_files
   skills: string | null;
   rounds: { round_id: number; round_no: number; round_name: string; result: string | null; feedback: string | null }[];
 };
@@ -224,6 +225,7 @@ export async function getJobWithApplicants(recruiterId: number, jobId: number): 
             RANK() OVER (ORDER BY a.match_score DESC NULLS LAST) AS rank,
             a.status::text AS status, a.match_score, a.applied_at,
             s.student_id, s.full_name, s.usn, s.branch, s.cgpa, s.resume_text,
+            EXISTS (SELECT 1 FROM resume_files f WHERE f.student_id = s.student_id) AS has_pdf,
             (SELECT string_agg(sk.name || ' (' || lower(ss.proficiency::text) || ')', ', ' ORDER BY sk.name)
                FROM student_skills ss JOIN skills sk ON sk.skill_id = ss.skill_id
               WHERE ss.student_id = s.student_id) AS skills,
